@@ -20,7 +20,7 @@ var (
 
 func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 	if u.Store() == nil {
-		return shared.ToFlashError(u.CacheStore(), w, r, "Shop store is not initialized", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Shop store is not initialized")
 	}
 
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{

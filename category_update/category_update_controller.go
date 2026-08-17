@@ -57,12 +57,12 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 
 func (u *ui) renderPage(r *http.Request) string {
 	if u.Store() == nil {
-		return shared.ToFlashError(u.CacheStore(), nil, r, "Shop store is not initialized", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Shop store is not initialized")
 	}
 
 	categoryID := req.GetStringTrimmed(r, "category_id")
 	if categoryID == "" {
-		return shared.ToFlashError(u.CacheStore(), nil, r, "Category ID is required", shared.URLR(r, shared.CONTROLLER_CATEGORIES, nil), 10)
+		return shared.ErrorAlert("Category ID is required")
 	}
 
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{

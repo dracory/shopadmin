@@ -3,7 +3,6 @@ package shopadmin
 import (
 	"log/slog"
 
-	"github.com/dracory/cachestore"
 	"github.com/dracory/shopstore"
 )
 
@@ -21,6 +20,5 @@ import (
 // AdminOptions, keeping shopadmin decoupled from userstore.
 type RegistryInterface interface {
 	GetShopStore() shopstore.StoreInterface
-	GetCacheStore() cachestore.StoreInterface
 	GetLogger() *slog.Logger
 }

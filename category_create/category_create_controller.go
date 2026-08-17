@@ -7,10 +7,10 @@ import (
 	"github.com/dracory/api"
 	"github.com/dracory/cdn"
 	"github.com/dracory/hb"
+	"github.com/dracory/neat/support/uid"
 	"github.com/dracory/req"
 	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
-	"github.com/dracory/uid"
 )
 
 const (
@@ -56,7 +56,7 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 
 func (u *ui) renderPage(r *http.Request) string {
 	if u.Store() == nil {
-		return shared.ToFlashError(u.CacheStore(), nil, r, "Shop store is not initialized", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Shop store is not initialized")
 	}
 
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
@@ -123,7 +123,7 @@ func (u *ui) handleCreateCategory(w http.ResponseWriter, r *http.Request) string
 	}
 
 	category := shopstore.NewCategory()
-	category.SetID(uid.HumanUid())
+	category.SetID(uid.GenerateShortID())
 	category.SetTitle(reqBody.Title)
 	category.SetDescription(reqBody.Description)
 	category.SetStatus(reqBody.Status)

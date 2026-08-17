@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dracory/bs"
 	"github.com/dracory/cdn"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
@@ -73,23 +72,23 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 	}
 
 	if productID == "" {
-		return shared.ToFlashError(u.CacheStore(), w, r, "Product ID is required", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Product ID is required")
 	}
 
 	store := u.Store()
 	if store == nil {
-		return shared.ToFlashError(u.CacheStore(), w, r, "Shop store not available", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Shop store not available")
 	}
 
 	product, err := store.ProductFindByID(r.Context(), productID)
 	if err != nil {
 		u.Logger().Error("Error. productUpdateController: ProductFindByID", "error", err.Error(), "product_id", productID)
-		return shared.ToFlashError(u.CacheStore(), w, r, "Product not found", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Product not found")
 	}
 
 	if product == nil {
 		u.Logger().Warn("Warning. productUpdateController: ProductFindByID", "error", "Product not found", "product_id", productID)
-		return shared.ToFlashError(u.CacheStore(), w, r, "Product not found", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Product not found")
 	}
 
 	// Handle POST requests for each view
@@ -158,34 +157,34 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 
 	linksHelper := shared.NewLinksFromRequest(r)
 
-	tabs := bs.NavTabs().
+	tabs := hb.UL().Class("nav nav-tabs").
 		Class("mb-3").
-		Child(bs.NavItem().
-			Child(bs.NavLink().
+		Child(hb.LI().Class("nav-item").
+			Child(hb.Hyperlink().Class("nav-link").
 				ClassIf(view == "details", "active").
 				Href(linksHelper.ProductUpdate(map[string]string{
 					"product_id": productID,
 					"view":       "details",
 				})).
 				HTML("Details"))).
-		Child(bs.NavItem().
-			Child(bs.NavLink().
+		Child(hb.LI().Class("nav-item").
+			Child(hb.Hyperlink().Class("nav-link").
 				ClassIf(view == "media", "active").
 				Href(linksHelper.ProductUpdate(map[string]string{
 					"product_id": productID,
 					"view":       "media",
 				})).
 				HTML("Media"))).
-		Child(bs.NavItem().
-			Child(bs.NavLink().
+		Child(hb.LI().Class("nav-item").
+			Child(hb.Hyperlink().Class("nav-link").
 				ClassIf(view == "tags", "active").
 				Href(linksHelper.ProductUpdate(map[string]string{
 					"product_id": productID,
 					"view":       "tags",
 				})).
 				HTML("Tags"))).
-		Child(bs.NavItem().
-			Child(bs.NavLink().
+		Child(hb.LI().Class("nav-item").
+			Child(hb.Hyperlink().Class("nav-link").
 				ClassIf(view == "metadata", "active").
 				Href(linksHelper.ProductUpdate(map[string]string{
 					"product_id": productID,

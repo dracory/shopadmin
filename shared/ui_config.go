@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/dracory/cachestore"
 	"github.com/dracory/shopstore"
 )
 
@@ -40,7 +39,6 @@ type CustomerResolverInterface interface {
 // auth/user-management package.
 type UiConfig struct {
 	Store            shopstore.StoreInterface
-	CacheStore       cachestore.StoreInterface
 	Logger           *slog.Logger
 	CustomerResolver CustomerResolverInterface
 	Layout           func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {

@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/dracory/cachestore"
 	"github.com/dracory/shopstore"
 )
 
@@ -15,7 +14,6 @@ import (
 // userstore dependency.
 type UiInterface interface {
 	Store() shopstore.StoreInterface
-	CacheStore() cachestore.StoreInterface
 	Logger() *slog.Logger
 
 	// CustomerResolver returns the CustomerResolverInterface, or nil.

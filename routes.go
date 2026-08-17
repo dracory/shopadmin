@@ -26,7 +26,6 @@ func Routes(registry RegistryInterface, opts ...AdminOptions) ([]rtr.RouteInterf
 	// Build AdminOptions from registry + opts
 	fullOpts := AdminOptions{
 		Store:            registry.GetShopStore(),
-		CacheStore:       registry.GetCacheStore(),
 		Logger:           registry.GetLogger(),
 		CustomerResolver: options.CustomerResolver,
 		FuncLayout:       options.FuncLayout,
@@ -56,7 +55,6 @@ func Routes(registry RegistryInterface, opts ...AdminOptions) ([]rtr.RouteInterf
 	// previously rebuilt on every request)
 	uiConfig := shared.UiConfig{
 		Store:            fullOpts.Store,
-		CacheStore:       fullOpts.CacheStore,
 		Logger:           fullOpts.Logger,
 		CustomerResolver: fullOpts.CustomerResolver,
 		Layout: func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, layoutOpts struct {

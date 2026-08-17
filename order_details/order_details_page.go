@@ -33,12 +33,12 @@ func escapeJSString(s string) string {
 
 func (u *ui) renderPage(r *http.Request) string {
 	if u.Store() == nil {
-		return shared.ToFlashError(u.CacheStore(), nil, r, "Shop store is not initialized", shared.AdminHomeURL(r), 10)
+		return shared.ErrorAlert("Shop store is not initialized")
 	}
 
 	orderID := req.GetStringTrimmed(r, "order_id")
 	if orderID == "" {
-		return shared.ToFlashError(u.CacheStore(), nil, r, "Order ID is required", shared.URLR(r, shared.CONTROLLER_ORDERS, nil), 10)
+		return shared.ErrorAlert("Order ID is required")
 	}
 
 	// Escape user input for safe embedding (fixes #12 — XSS risk)

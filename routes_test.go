@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dracory/cachestore"
 	"github.com/dracory/shopadmin/testutils"
 	"github.com/dracory/shopstore"
 	_ "modernc.org/sqlite"
@@ -17,14 +16,12 @@ import (
 
 // mockRegistryImpl implements RegistryInterface for testing
 type mockRegistryImpl struct {
-	store      shopstore.StoreInterface
-	cacheStore cachestore.StoreInterface
-	logger     *slog.Logger
+	store  shopstore.StoreInterface
+	logger *slog.Logger
 }
 
-func (m *mockRegistryImpl) GetShopStore() shopstore.StoreInterface   { return m.store }
-func (m *mockRegistryImpl) GetCacheStore() cachestore.StoreInterface { return m.cacheStore }
-func (m *mockRegistryImpl) GetLogger() *slog.Logger                  { return m.logger }
+func (m *mockRegistryImpl) GetShopStore() shopstore.StoreInterface { return m.store }
+func (m *mockRegistryImpl) GetLogger() *slog.Logger                { return m.logger }
 
 func TestRoutes_Valid(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")

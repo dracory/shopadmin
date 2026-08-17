@@ -10,7 +10,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/dracory/cachestore"
 	"github.com/dracory/req"
 	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
@@ -28,10 +27,6 @@ import (
 type AdminOptions struct {
 	// Store is the shopstore.StoreInterface (required)
 	Store shopstore.StoreInterface
-
-	// CacheStore is optional — used for flash messages.
-	// If nil, flash errors fall back to inline HTML rendering.
-	CacheStore cachestore.StoreInterface
 
 	// Logger is required (matches cmsstore requirement)
 	Logger *slog.Logger
@@ -75,7 +70,6 @@ type AdminInterface interface {
 // admin implements AdminInterface
 type admin struct {
 	store            shopstore.StoreInterface
-	cacheStore       cachestore.StoreInterface
 	logger           *slog.Logger
 	customerResolver CustomerResolverInterface
 	funcLayout       func(title string, body string, options struct {
@@ -111,7 +105,6 @@ func New(opts AdminOptions) (AdminInterface, error) {
 
 	a := &admin{
 		store:            opts.Store,
-		cacheStore:       opts.CacheStore,
 		logger:           opts.Logger,
 		customerResolver: opts.CustomerResolver,
 		funcLayout:       opts.FuncLayout,
@@ -164,7 +157,6 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 func (a *admin) buildRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	uiConfig := shared.UiConfig{
 		Store:            a.store,
-		CacheStore:       a.cacheStore,
 		Logger:           a.logger,
 		CustomerResolver: a.customerResolver,
 		Layout:           a.render,
