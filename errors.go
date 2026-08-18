@@ -8,8 +8,4 @@ var (
 
 	// ErrLoggerRequired is returned when Logger is not provided
 	ErrLoggerRequired = errors.New("logger is required")
-
-	// ErrRegistryRequired is returned when Registry is not provided
-	// (kept for backward compatibility with Routes())
-	ErrRegistryRequired = errors.New("registry is required")
 )

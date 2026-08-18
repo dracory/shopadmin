@@ -14,9 +14,9 @@ For commercial use, please use my [contact page](https://lesichkov.co.uk/contact
 
 ## Introduction
 
-Standalone shop admin interface module for Go. Provides a ready-to-use
-admin panel for managing products, categories, discounts, and orders,
-built on top of [`github.com/dracory/shopstore`](https://github.com/dracory/shopstore).
+Admin interface for [`github.com/dracory/shopstore`](https://github.com/dracory/shopstore).
+Provides a ready-to-use admin panel for managing products, categories,
+discounts, and orders.
 
 Modeled after [`github.com/dracory/cmsstore/admin`](https://github.com/dracory/cmsstore)
 — same folder-per-controller pattern, same `UiConfig`/`UiBase` conventions.
@@ -83,24 +83,19 @@ func main() {
 
 ## Integration with a Router
 
-Use `Routes()` to get `rtr.RouteInterface` slices for integration with
-the host project's router:
+`shopadmin.AdminInterface` exposes `Handle(w, r)`, which is an
+`http.HandlerFunc`-compatible method. Wire it into any router that
+accepts standard `http.Handler`:
 
 ```go
-routes, err := shopadmin.Routes(app, shopadmin.AdminOptions{
-    ShopAdminURL: links.Admin().Shop(),
-    AdminHomeURL: links.Admin().Home(),
-})
-```
+// stdlib
+mux.Handle("/admin/shop", http.HandlerFunc(admin.Handle))
 
-`app` must implement `shopadmin.RegistryInterface`:
-
-```go
-type RegistryInterface interface {
-    GetShopStore() shopstore.StoreInterface
-    GetCacheStore() cachestore.StoreInterface
-    GetLogger() *slog.Logger
-}
+// github.com/dracory/rtr
+route := rtr.NewRoute().
+    SetName("Admin > Shop").
+    SetPath("/admin/shop").
+    SetHTMLHandler(admin.Handle)
 ```
 
 ## Customer Resolution
@@ -170,40 +165,6 @@ admin, _ := shopadmin.New(shopadmin.AdminOptions{
 })
 ```
 
-## Project Structure
-
-```
-shopadmin/
-├── shopadmin.go              # AdminOptions, New(), Handle()
-├── routes.go                 # Routes() for router integration
-├── registry.go               # RegistryInterface
-├── types.go                  # CustomerResolverInterface (re-export)
-├── errors.go                 # Sentinel errors
-├── context.go                # Request context helpers
-├── controllers.go            # buildControllerRoutes()
-├── shared/                   # Shared UI infrastructure
-│   ├── ui_config.go          # UiConfig, CustomerResolverInterface
-│   ├── ui_base.go            # UiBase (embeds into controllers)
-│   ├── ui_interface.go       # UiInterface
-│   ├── layout.go             # Default layout
-│   ├── flash.go              # Flash messages
-│   ├── header.go             # Admin header
-│   └── links.go              # URL builders
-├── home/                     # Dashboard controller
-├── product_manager/          # Product list controller
-├── product_update/           # Product edit controller
-├── product_delete/           # Product delete controller
-├── category_manager/         # Category list controller
-├── category_create/          # Category create controller
-├── category_update/          # Category update controller
-├── discount_manager/         # Discount list controller
-├── order_manager/            # Order list controller
-├── order_details/            # Order details controller
-├── testutils/                # Test utilities
-└── docs/
-    └── proposal.md           # CustomerResolverInterface design doc
-```
-
 ## Testing
 
 ```bash
@@ -217,18 +178,11 @@ external services required.
 
 - [`github.com/dracory/shopstore`](https://github.com/dracory/shopstore) — store interface
 - [`github.com/dracory/cachestore`](https://github.com/dracory/cachestore) — flash messages (optional)
-- [`github.com/dracory/rtr`](https://github.com/dracory/rtr) — router integration
 - [`github.com/dracory/hb`](https://github.com/dracory/hb) — HTML builder
 - [`github.com/dracory/bs`](https://github.com/dracory/bs) — Bootstrap components
 
 **Not** dependent on `userstore` — customer resolution is via
 `CustomerResolverInterface`.
-
-## License
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). You can find a copy of the license at [https://www.gnu.org/licenses/agpl-3.0.en.html](https://www.gnu.org/licenses/agpl-3.0.txt)
-
-For commercial use, please use my [contact page](https://lesichkov.co.uk/contact) to obtain a commercial license.
 
 # Documentation
 

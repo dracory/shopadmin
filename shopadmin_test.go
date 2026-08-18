@@ -250,6 +250,43 @@ func TestCustomerResolver_NilSafe(t *testing.T) {
 	}
 }
 
+// TestCustomerResolver_PassedThrough verifies CustomerResolver is wired
+// from AdminOptions through to the admin instance
+func TestCustomerResolver_PassedThrough(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	resolver := &mockCustomerResolver{
+		name:  "John Doe",
+		email: "john@example.com",
+		ids:   []string{"cust-1"},
+	}
+
+	a, err := New(AdminOptions{
+		Store:            store,
+		Logger:           slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		CustomerResolver: resolver,
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	admin := a.(*admin)
+	if admin.customerResolver == nil {
+		t.Errorf("Expected customerResolver to be set")
+	}
+
+	name, email := admin.customerResolver.FindByID(context.Background(), "cust-1")
+	if name != "John Doe" {
+		t.Errorf("Expected name 'John Doe', got '%s'", name)
+	}
+	if email != "john@example.com" {
+		t.Errorf("Expected email 'john@example.com', got '%s'", email)
+	}
+}
+
 func min(a, b int) int {
 	if a < b {
 		return a

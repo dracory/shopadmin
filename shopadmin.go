@@ -153,7 +153,7 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 	handler(w, r)
 }
 
-// buildRoutes creates the controller dispatch map once at construction time.
+// buildRoutes creates the handler dispatch map once at construction time.
 func (a *admin) buildRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	uiConfig := shared.UiConfig{
 		Store:            a.store,
@@ -162,7 +162,17 @@ func (a *admin) buildRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 		Layout:           a.render,
 	}
 
-	return buildControllerRoutes(uiConfig, a.fileManagerURL)
+	return map[string]func(w http.ResponseWriter, r *http.Request){
+		shared.CONTROLLER_HOME:            homeHandler(uiConfig, a.fileManagerURL),
+		shared.CONTROLLER_PRODUCTS:        productManagerHandler(uiConfig),
+		shared.CONTROLLER_PRODUCT_UPDATE:  productUpdateHandler(uiConfig, a.fileManagerURL),
+		shared.CONTROLLER_CATEGORIES:      categoryManagerHandler(uiConfig),
+		shared.CONTROLLER_CATEGORY_CREATE: categoryCreateHandler(uiConfig),
+		shared.CONTROLLER_CATEGORY_UPDATE: categoryUpdateHandler(uiConfig),
+		shared.CONTROLLER_DISCOUNTS:       discountManagerHandler(uiConfig),
+		shared.CONTROLLER_ORDERS:          orderManagerHandler(uiConfig),
+		shared.CONTROLLER_ORDER_DETAILS:   orderDetailsHandler(uiConfig),
+	}
 }
 
 // render wraps content in the layout. If FuncLayout is provided and
