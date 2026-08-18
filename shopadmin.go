@@ -11,6 +11,18 @@ import (
 	"net/http"
 
 	"github.com/dracory/req"
+	"github.com/dracory/shopadmin/category_create"
+	"github.com/dracory/shopadmin/category_manager"
+	"github.com/dracory/shopadmin/category_update"
+	"github.com/dracory/shopadmin/discount_manager"
+	"github.com/dracory/shopadmin/discount_update"
+	"github.com/dracory/shopadmin/discount_view"
+	"github.com/dracory/shopadmin/home"
+	"github.com/dracory/shopadmin/order_details"
+	"github.com/dracory/shopadmin/order_manager"
+	"github.com/dracory/shopadmin/product_manager"
+	"github.com/dracory/shopadmin/product_update"
+	"github.com/dracory/shopadmin/product_view"
 	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
 )
@@ -163,15 +175,22 @@ func (a *admin) buildRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 	}
 
 	return map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.CONTROLLER_HOME:            homeHandler(uiConfig, a.fileManagerURL),
-		shared.CONTROLLER_PRODUCTS:        productManagerHandler(uiConfig),
-		shared.CONTROLLER_PRODUCT_UPDATE:  productUpdateHandler(uiConfig, a.fileManagerURL),
-		shared.CONTROLLER_CATEGORIES:      categoryManagerHandler(uiConfig),
-		shared.CONTROLLER_CATEGORY_CREATE: categoryCreateHandler(uiConfig),
-		shared.CONTROLLER_CATEGORY_UPDATE: categoryUpdateHandler(uiConfig),
-		shared.CONTROLLER_DISCOUNTS:       discountManagerHandler(uiConfig),
-		shared.CONTROLLER_ORDERS:          orderManagerHandler(uiConfig),
-		shared.CONTROLLER_ORDER_DETAILS:   orderDetailsHandler(uiConfig),
+		shared.CONTROLLER_HOME:     func(w http.ResponseWriter, r *http.Request) { home.UI(uiConfig).Home(w, r) },
+		shared.CONTROLLER_PRODUCTS: func(w http.ResponseWriter, r *http.Request) { product_manager.UI(uiConfig).ProductManager(w, r) },
+		shared.CONTROLLER_PRODUCT_VIEW: func(w http.ResponseWriter, r *http.Request) {
+			product_view.UI(uiConfig).ProductView(w, r)
+		},
+		shared.CONTROLLER_PRODUCT_UPDATE: func(w http.ResponseWriter, r *http.Request) {
+			product_update.UI(uiConfig, a.fileManagerURL).ProductUpdate(w, r)
+		},
+		shared.CONTROLLER_CATEGORIES:      func(w http.ResponseWriter, r *http.Request) { category_manager.UI(uiConfig).CategoryManager(w, r) },
+		shared.CONTROLLER_CATEGORY_CREATE: func(w http.ResponseWriter, r *http.Request) { category_create.UI(uiConfig).CategoryCreate(w, r) },
+		shared.CONTROLLER_CATEGORY_UPDATE: func(w http.ResponseWriter, r *http.Request) { category_update.UI(uiConfig).CategoryUpdate(w, r) },
+		shared.CONTROLLER_DISCOUNTS:       func(w http.ResponseWriter, r *http.Request) { discount_manager.UI(uiConfig).DiscountManager(w, r) },
+		shared.CONTROLLER_DISCOUNT_VIEW:   func(w http.ResponseWriter, r *http.Request) { discount_view.UI(uiConfig).DiscountView(w, r) },
+		shared.CONTROLLER_DISCOUNT_UPDATE: func(w http.ResponseWriter, r *http.Request) { discount_update.UI(uiConfig).DiscountUpdate(w, r) },
+		shared.CONTROLLER_ORDERS:          func(w http.ResponseWriter, r *http.Request) { order_manager.UI(uiConfig).OrderManager(w, r) },
+		shared.CONTROLLER_ORDER_DETAILS:   func(w http.ResponseWriter, r *http.Request) { order_details.UI(uiConfig).OrderDetails(w, r) },
 	}
 }
 

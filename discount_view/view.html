@@ -1,0 +1,66 @@
+<div id="app">
+  <template v-if="loading">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading data...</span>
+      </div>
+    </div>
+  </template>
+
+  <template v-else>
+    <div v-if="discount" class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Discount #{{ discount.id }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Discount Information</h6>
+            <p><strong>Code:</strong> {{ discount.code || '-' }}</p>
+            <p><strong>Title:</strong> {{ discount.title || '-' }}</p>
+            <p><strong>Type:</strong> {{ discount.type || '-' }}</p>
+            <p><strong>Amount:</strong> {{ discount.amount !== null && discount.amount !== undefined ? discount.amount : '-' }}</p>
+            <p><strong>Status:</strong>
+              <span class="badge" :class="getStatusBadgeClass(discount.status)">{{ discount.status }}</span>
+            </p>
+          </div>
+          <div class="col-md-6">
+            <h6>Validity</h6>
+            <p><strong>Starts At:</strong> <span v-html="formatDate(discount.starts_at)"></span></p>
+            <p><strong>Ends At:</strong> <span v-html="formatDate(discount.ends_at)"></span></p>
+            <hr>
+            <h6>Usage</h6>
+            <p><strong>Max Uses:</strong> {{ discount.max_uses || '-' }}</p>
+            <p><strong>Used:</strong> {{ discount.max_uses_count || 0 }}</p>
+            <p><strong>Max Uses Per Customer:</strong> {{ discount.max_uses_per_customer || '-' }}</p>
+          </div>
+        </div>
+        <hr>
+        <h6>Description</h6>
+        <p>{{ discount.description || 'No description provided.' }}</p>
+        <div v-if="discount.memo">
+          <h6>Admin Notes</h6>
+          <p class="text-muted">{{ discount.memo }}</p>
+        </div>
+        <hr>
+        <h6>Timestamps</h6>
+        <p><strong>Created:</strong> <span v-html="formatDate(discount.created_at)"></span></p>
+        <p><strong>Updated:</strong> <span v-html="formatDate(discount.updated_at)"></span></p>
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <a :href="urlDiscounts" class="btn btn-secondary">Back to Discounts</a>
+        <div>
+          <a :href="urlDiscountUpdate" class="btn btn-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Edit
+          </a>
+          <button class="btn btn-danger" @click="deleteDiscount">
+            <i class="bi bi-trash me-1"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+    <div v-else class="alert alert-warning">
+      Discount not found.
+    </div>
+  </template>
+</div>

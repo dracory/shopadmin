@@ -6,6 +6,7 @@ createApp({
       stats: {
         product_count: 0,
         category_count: 0,
+        discount_count: 0,
         order_count: 0
       },
       urlProducts: urlProducts,

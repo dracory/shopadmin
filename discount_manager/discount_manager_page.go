@@ -2,8 +2,9 @@ package discount_manager
 
 import (
 	_ "embed"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/dracory/cdn"
 	"github.com/dracory/hb"
@@ -32,28 +33,22 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 	heading := hb.Heading1().HTML("Discount Manager")
 
 	linksHelper := shared.NewLinksFromRequest(r)
-	urlLoadDiscounts := linksHelper.Discounts(map[string]string{"action": actionLoadDiscounts})
-	urlDiscountDelete := linksHelper.Discounts(map[string]string{"action": actionDiscountDelete})
-	urlDiscountDeleteSelected := linksHelper.Discounts(map[string]string{"action": actionDiscountDeleteSelected})
+	urls := map[string]string{
+		"loadDiscounts":  linksHelper.Discounts(map[string]string{"action": actionLoadDiscounts}),
+		"createDiscount": linksHelper.Discounts(map[string]string{"action": actionCreateDiscount}),
+	}
 
-	html := strings.ReplaceAll(discountsHTML, "urlLoadDiscounts", "'"+urlLoadDiscounts+"'")
-	html = strings.ReplaceAll(html, "urlDiscountDelete", "'"+urlDiscountDelete+"'")
-	html = strings.ReplaceAll(html, "urlDiscountDeleteSelected", "'"+urlDiscountDeleteSelected+"'")
-
-	js := strings.ReplaceAll(discountsJS, "urlLoadDiscounts", "'"+urlLoadDiscounts+"'")
-	js = strings.ReplaceAll(js, "urlDiscountDelete", "'"+urlDiscountDelete+"'")
-	js = strings.ReplaceAll(js, "urlDiscountDeleteSelected", "'"+urlDiscountDeleteSelected+"'")
-
-	vueCDN := hb.Script("").Src("https://unpkg.com/vue@3/dist/vue.global.js")
+	urlsJSON, _ := json.Marshal(urls)
+	urlsScript := hb.Script(fmt.Sprintf("window.discountManagerUrls = %s;", string(urlsJSON)))
 
 	content := hb.Div().
 		Class("container").
 		Child(heading).
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		Child(vueCDN).
-		Child(hb.Raw(html)).
-		Child(hb.Script(js))
+		Child(urlsScript).
+		Child(hb.Raw(discountsHTML)).
+		Child(hb.Script(discountsJS))
 
 	return u.Layout(w, r, "Discounts | Shop", content.ToHTML(), struct {
 		Styles     []string
@@ -62,8 +57,12 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		ScriptURLs []string
 	}{
 		ScriptURLs: []string{
-			cdn.Htmx_1_9_4(),
+			cdn.VueJs_3(),
 			cdn.Sweetalert2_10(),
+			cdn.Notiflix_3_2_8(),
+		},
+		StyleURLs: []string{
+			cdn.Notiflix_3_2_8_CSS(),
 		},
 	})
 }

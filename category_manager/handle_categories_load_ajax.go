@@ -6,6 +6,7 @@ import (
 
 	"github.com/dracory/api"
 	"github.com/dracory/neat"
+	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
 )
 
@@ -20,10 +21,13 @@ func (u *ui) handleLoadCategories(w http.ResponseWriter, r *http.Request) string
 	}
 
 	var reqBody struct {
-		Page    int    `json:"page"`
-		PerPage int    `json:"per_page"`
-		SortBy  string `json:"sort_by"`
-		Sort    string `json:"sort"`
+		Page        int    `json:"page"`
+		PerPage     int    `json:"per_page"`
+		SortBy      string `json:"sort_by"`
+		Sort        string `json:"sort"`
+		Status      string `json:"status"`
+		CreatedFrom string `json:"created_from"`
+		CreatedTo   string `json:"created_to"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -49,6 +53,10 @@ func (u *ui) handleLoadCategories(w http.ResponseWriter, r *http.Request) string
 		SetLimit(reqBody.PerPage).
 		SetOrderBy(reqBody.SortBy).
 		SetSortDirection(reqBody.Sort)
+
+	if reqBody.Status != "" {
+		query.SetStatus(reqBody.Status)
+	}
 
 	categories, err := shopStore.CategoryList(ctx, query)
 	if err != nil {
@@ -79,12 +87,20 @@ func (u *ui) handleLoadCategories(w http.ResponseWriter, r *http.Request) string
 		})
 	}
 
+	linksHelper := shared.NewLinksFromRequest(r)
+	urls := map[string]string{
+		"categoryDelete":         linksHelper.Categories(map[string]string{"action": actionCategoryDelete}),
+		"categoryDeleteSelected": linksHelper.Categories(map[string]string{"action": actionCategoryDeleteSelected}),
+		"categoryUpdate":         linksHelper.CategoryUpdate(map[string]string{}),
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(api.SuccessWithData("Categories loaded successfully", map[string]any{
 		"categories": categoryList,
 		"total":      total,
 		"page":       reqBody.Page,
 		"per_page":   reqBody.PerPage,
+		"urls":       urls,
 	}).ToString()))
 	return ""
 }

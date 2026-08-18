@@ -70,7 +70,7 @@ func (u *ui) renderPage(r *http.Request) string {
 	jsContent = strings.ReplaceAll(jsContent, "urlLoadOrderDetails", "'"+urlLoadOrderDetailsJS+"'")
 	jsContent = strings.ReplaceAll(jsContent, "ORDER_ID", "'"+orderIDJS+"'")
 
-	vueCDN := hb.Script("").Src("https://unpkg.com/vue@3/dist/vue.global.js")
+	vueCDN := hb.Script("").Src(cdn.VueJs_3())
 
 	content := hb.Div().
 		Class("container").

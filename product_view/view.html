@@ -1,0 +1,59 @@
+<div id="app">
+  <template v-if="loading">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading data...</span>
+      </div>
+    </div>
+  </template>
+
+  <template v-else>
+    <div v-if="product" class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Product #{{ product.id }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Product Information</h6>
+            <p><strong>Title:</strong> {{ product.title || '-' }}</p>
+            <p><strong>Status:</strong>
+              <span class="badge" :class="getStatusBadgeClass(product.status)">{{ product.status }}</span>
+            </p>
+            <p><strong>Price:</strong> {{ product.price || '-' }}</p>
+            <p><strong>Quantity:</strong> {{ product.quantity || '-' }}</p>
+            <p><strong>Parent ID:</strong> {{ product.parent_id || '-' }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6>Timestamps</h6>
+            <p><strong>Created:</strong> <span v-html="formatDate(product.created_at)"></span></p>
+            <p><strong>Updated:</strong> <span v-html="formatDate(product.updated_at)"></span></p>
+          </div>
+        </div>
+        <hr>
+        <h6>Short Description</h6>
+        <p>{{ product.short_description || 'No short description provided.' }}</p>
+        <h6>Description</h6>
+        <p>{{ product.description || 'No description provided.' }}</p>
+        <div v-if="product.memo">
+          <h6>Admin Notes</h6>
+          <p class="text-muted">{{ product.memo }}</p>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <a :href="urlProducts" class="btn btn-secondary">Back to Products</a>
+        <div>
+          <a :href="urlProductUpdate" class="btn btn-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Edit
+          </a>
+          <button class="btn btn-danger" @click="deleteProduct">
+            <i class="bi bi-trash me-1"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+    <div v-else class="alert alert-warning">
+      Product not found.
+    </div>
+  </template>
+</div>

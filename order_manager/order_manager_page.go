@@ -40,7 +40,7 @@ func (u *ui) renderPage(r *http.Request) string {
 	js := strings.ReplaceAll(ordersJS, "urlLoadOrders", "'"+urlLoadOrders+"'")
 	js = strings.ReplaceAll(js, "urlOrderDetails", "'"+urlOrderDetails+"'")
 
-	vueCDN := hb.Script("").Src("https://unpkg.com/vue@3/dist/vue.global.js")
+	vueCDN := hb.Script("").Src(cdn.VueJs_3())
 
 	content := hb.Div().
 		Class("container").

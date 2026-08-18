@@ -58,6 +58,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Seed the in-memory DB with sample data for testing pagination,
+	// filtering, and sorting. Skip seeding if a file-based DB is used
+	// (persisted data should not be overwritten).
+	if dbFile == ":memory:" {
+		seedDB(store, logger)
+	}
+
 	admin, err := shopadmin.New(shopadmin.AdminOptions{
 		Store:          store,
 		Logger:         logger,

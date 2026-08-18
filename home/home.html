@@ -24,8 +24,8 @@
       <div class="card h-100 border-0 shadow-sm" style="background-color: #fff3e0;">
         <div class="card-body text-center">
           <i class="bi bi-percent fs-1 text-warning mb-2" style="color: #ff9800;"></i>
-          <h3 class="card-title">Discounts</h3>
-          <p class="card-text text-muted">Manage discounts</p>
+          <h3 class="card-title">{{ stats.discount_count || 0 }}</h3>
+          <p class="card-text text-muted">Discounts</p>
           <a :href="urlDiscounts" class="btn btn-warning btn-sm">Manage Discounts</a>
         </div>
       </div>

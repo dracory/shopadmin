@@ -1,0 +1,193 @@
+<div id="details-app">
+    <template v-if="loading">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading data...</span>
+            </div>
+        </div>
+    </template>
+
+    <template v-else>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-tag me-2"></i>
+                <span>Discount Details</span>
+            </h5>
+            <button
+                type="button"
+                class="btn btn-success"
+                @click="saveDetails"
+                :disabled="loading"
+            >
+                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i v-else class="bi bi-save me-2"></i>
+                Save Details
+            </button>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form @submit.prevent="saveDetails">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Discount ID</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="discountID"
+                                readonly
+                                disabled
+                                tabindex="-1"
+                            >
+                            <small class="text-muted">The reference number (ID) of the discount.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="status" required>
+                                <option value="">- not selected -</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                            <small class="text-muted">The status of the discount.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Code <span class="text-danger">*</span></label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="code"
+                                placeholder="Enter discount code..."
+                                required
+                            >
+                            <small class="text-muted">The unique discount code.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="title"
+                                placeholder="Enter discount title..."
+                                required
+                            >
+                            <small class="text-muted">The title of the discount.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Type <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="type" required>
+                                <option value="">- not selected -</option>
+                                <option value="percent">Percentage</option>
+                                <option value="amount">Fixed Amount</option>
+                            </select>
+                            <small class="text-muted">The type of the discount.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Amount <span class="text-danger">*</span></label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                v-model="amount"
+                                placeholder="Enter amount..."
+                                step="0.01"
+                                min="0"
+                                required
+                            >
+                            <small class="text-muted">The discount amount (percentage or fixed value).</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Starts At</label>
+                            <el-date-picker
+                                v-model="startsAt"
+                                type="datetime"
+                                placeholder="Select start date and time"
+                                format="YYYY-MM-DD HH:mm:ss"
+                                value-format="YYYY-MM-DD HH:mm:ss"
+                                style="width: 100%"
+                            ></el-date-picker>
+                            <small class="text-muted">When the discount becomes valid.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Ends At</label>
+                            <el-date-picker
+                                v-model="endsAt"
+                                type="datetime"
+                                placeholder="Select end date and time"
+                                format="YYYY-MM-DD HH:mm:ss"
+                                value-format="YYYY-MM-DD HH:mm:ss"
+                                style="width: 100%"
+                            ></el-date-picker>
+                            <small class="text-muted">When the discount expires.</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Max Uses</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                v-model="maxUses"
+                                placeholder="e.g. 1000"
+                                min="0"
+                            >
+                            <small class="text-muted">Global redemption cap. High value = effectively unlimited.</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Max Uses Per Customer</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                v-model="maxUsesPerCustomer"
+                                placeholder="e.g. 1"
+                                min="0"
+                            >
+                            <small class="text-muted">How many times a single customer can redeem this discount.</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Times Used</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                :value="maxUsesCount"
+                                readonly
+                                disabled
+                                tabindex="-1"
+                            >
+                            <small class="text-muted">How many times this discount has been redeemed (read-only).</small>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea
+                                class="form-control"
+                                v-model="description"
+                                rows="4"
+                                placeholder="Enter discount description..."
+                            ></textarea>
+                            <small class="text-muted">The description of the discount.</small>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Admin Notes</label>
+                            <textarea
+                                class="form-control"
+                                v-model="memo"
+                                rows="3"
+                                placeholder="Enter admin notes..."
+                            ></textarea>
+                            <small class="text-muted">Admin notes for this discount. These notes will not be visible to the public.</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+</div>

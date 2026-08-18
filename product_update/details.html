@@ -1,11 +1,13 @@
 <div id="details-app">
-    <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <template v-if="loading">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading data...</span>
+            </div>
         </div>
-    </div>
+    </template>
 
-    <div v-else>
+    <template v-else>
         <!-- Success Message -->
         <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
             {{ successMessage }}
@@ -128,5 +130,5 @@
                 </form>
             </div>
         </div>
-    </div>
+    </template>
 </div>

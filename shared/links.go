@@ -40,6 +40,11 @@ func (l *Links) ProductUpdate(params map[string]string) string {
 	return l.url(CONTROLLER_PRODUCT_UPDATE, params)
 }
 
+// ProductView builds the URL for the product view controller
+func (l *Links) ProductView(params map[string]string) string {
+	return l.url(CONTROLLER_PRODUCT_VIEW, params)
+}
+
 // Categories builds the URL for the categories controller
 func (l *Links) Categories(params map[string]string) string {
 	return l.url(CONTROLLER_CATEGORIES, params)
@@ -58,6 +63,16 @@ func (l *Links) CategoryUpdate(params map[string]string) string {
 // Discounts builds the URL for the discounts controller
 func (l *Links) Discounts(params map[string]string) string {
 	return l.url(CONTROLLER_DISCOUNTS, params)
+}
+
+// DiscountUpdate builds the URL for the discount update controller
+func (l *Links) DiscountUpdate(params map[string]string) string {
+	return l.url(CONTROLLER_DISCOUNT_UPDATE, params)
+}
+
+// DiscountView builds the URL for the discount view controller
+func (l *Links) DiscountView(params map[string]string) string {
+	return l.url(CONTROLLER_DISCOUNT_VIEW, params)
 }
 
 // Orders builds the URL for the orders controller

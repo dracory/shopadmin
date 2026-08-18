@@ -129,7 +129,7 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 			cdn.Jquery_3_7_1(),
 			"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js",
 			cdn.Sweetalert2_10(),
-			"https://unpkg.com/vue@3/dist/vue.global.js",
+			cdn.VueJs_3(),
 		},
 		StyleURLs: []string{
 			"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css",
@@ -689,17 +689,31 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 	}
 
 	var reqBody struct {
-		Status      string `json:"status"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Price       string `json:"price"`
-		Quantity    string `json:"quantity"`
-		Memo        string `json:"memo"`
+		Status      string          `json:"status"`
+		Title       string          `json:"title"`
+		Description json.RawMessage `json:"description"`
+		Price       string          `json:"price"`
+		Quantity    string          `json:"quantity"`
+		Memo        string          `json:"memo"`
 	}
 	bodyBytes, _ := io.ReadAll(r.Body)
 	if err := json.Unmarshal(bodyBytes, &reqBody); err != nil {
+		u.Logger().Error("handleSaveDetails: failed to decode request body", "error", err, "body", string(bodyBytes))
 		writeJSONError(w, "Invalid request body")
 		return ""
+	}
+
+	// Description may arrive as a string, an object (e.g. empty {} from
+	// Summernote before init), or a number. Coerce safely to string.
+	description := ""
+	if len(reqBody.Description) > 0 {
+		var descStr string
+		if err := json.Unmarshal(reqBody.Description, &descStr); err == nil {
+			description = descStr
+		} else {
+			// Not a JSON string — use the raw bytes as a fallback string
+			description = string(reqBody.Description)
+		}
 	}
 
 	product, err := shopStore.ProductFindByID(ctx, productID)
@@ -716,7 +730,7 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 
 	product.SetStatus(reqBody.Status)
 	product.SetTitle(reqBody.Title)
-	product.SetDescription(reqBody.Description)
+	product.SetDescription(description)
 	product.SetPrice(reqBody.Price)
 	product.SetQuantity(reqBody.Quantity)
 	product.SetMemo(reqBody.Memo)

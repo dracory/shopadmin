@@ -11,6 +11,7 @@ const (
 	actionLoadDiscounts          = "load-discounts"
 	actionDiscountDelete         = "delete-discount"
 	actionDiscountDeleteSelected = "delete-selected"
+	actionCreateDiscount         = "create-discount-ajax"
 )
 
 // UiInterface defines the discount manager controller's UI interface
@@ -49,6 +50,8 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 		return u.handleDiscountDelete(w, r)
 	case actionDiscountDeleteSelected:
 		return u.handleDiscountDeleteSelected(w, r)
+	case actionCreateDiscount:
+		return u.handleDiscountCreateAjax(w, r)
 	default:
 		return u.renderPage(w, r)
 	}

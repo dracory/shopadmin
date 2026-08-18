@@ -37,6 +37,7 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		"loadProducts":          linksHelper.Products(map[string]string{"action": actionLoadProducts}),
 		"productDelete":         linksHelper.Products(map[string]string{"action": actionProductDelete}),
 		"productDeleteSelected": linksHelper.Products(map[string]string{"action": actionProductDeleteSelected}),
+		"viewProduct":           linksHelper.ProductView(map[string]string{}),
 		"updateProduct":         linksHelper.ProductUpdate(map[string]string{}),
 		"createProduct":         linksHelper.Products(map[string]string{"action": actionCreateProduct}),
 	}

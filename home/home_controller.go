@@ -89,7 +89,7 @@ func (u *ui) renderPage(r *http.Request) string {
 	componentScript := hb.Script(string(jsContent))
 
 	vueContainer := hb.Div().
-		Child(hb.Script("").Src("https://unpkg.com/vue@3/dist/vue.global.js")).
+		Child(hb.Script("").Src(cdn.VueJs_3())).
 		Child(htmlTemplate).
 		Child(initScript).
 		Child(componentScript)
@@ -134,6 +134,12 @@ func (u *ui) handleLoadStats(w http.ResponseWriter, r *http.Request) string {
 		categoryCount = 0
 	}
 
+	discountCount, err := u.Store().DiscountCount(ctx, shopstore.NewDiscountQuery())
+	if err != nil {
+		u.Logger().Error("Failed to count discounts", "error", err)
+		discountCount = 0
+	}
+
 	orderCount, err := u.Store().OrderCount(ctx, shopstore.NewOrderQuery())
 	if err != nil {
 		u.Logger().Error("Failed to count orders", "error", err)
@@ -144,6 +150,7 @@ func (u *ui) handleLoadStats(w http.ResponseWriter, r *http.Request) string {
 	w.Write([]byte(api.SuccessWithData("Stats loaded successfully", map[string]any{
 		"product_count":  productCount,
 		"category_count": categoryCount,
+		"discount_count": discountCount,
 		"order_count":    orderCount,
 	}).ToString()))
 	return ""

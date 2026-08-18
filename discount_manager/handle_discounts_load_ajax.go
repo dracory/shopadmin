@@ -6,6 +6,7 @@ import (
 
 	"github.com/dracory/api"
 	"github.com/dracory/neat"
+	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
 )
 
@@ -20,10 +21,13 @@ func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string 
 	}
 
 	var reqBody struct {
-		Page    int    `json:"page"`
-		PerPage int    `json:"per_page"`
-		SortBy  string `json:"sort_by"`
-		Sort    string `json:"sort"`
+		Page        int    `json:"page"`
+		PerPage     int    `json:"per_page"`
+		SortBy      string `json:"sort_by"`
+		Sort        string `json:"sort"`
+		Status      string `json:"status"`
+		CreatedFrom string `json:"created_from"`
+		CreatedTo   string `json:"created_to"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -49,6 +53,18 @@ func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string 
 		SetLimit(reqBody.PerPage).
 		SetOrderBy(reqBody.SortBy).
 		SetSortDirection(reqBody.Sort)
+
+	if reqBody.Status != "" {
+		query.SetStatus(reqBody.Status)
+	}
+
+	if reqBody.CreatedFrom != "" {
+		query.SetCreatedAtGte(reqBody.CreatedFrom + " 00:00:00")
+	}
+
+	if reqBody.CreatedTo != "" {
+		query.SetCreatedAtLte(reqBody.CreatedTo + " 23:59:59")
+	}
 
 	discounts, err := shopStore.DiscountList(ctx, query)
 	if err != nil {
@@ -78,12 +94,22 @@ func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string 
 		})
 	}
 
+	linksHelper := shared.NewLinksFromRequest(r)
+	urls := map[string]string{
+		"deleteDiscount":          linksHelper.Discounts(map[string]string{"action": actionDiscountDelete}),
+		"deleteSelectedDiscounts": linksHelper.Discounts(map[string]string{"action": actionDiscountDeleteSelected}),
+		"discountView":            linksHelper.DiscountView(map[string]string{}),
+		"discountUpdate":          linksHelper.DiscountUpdate(map[string]string{}),
+		"createDiscount":          linksHelper.Discounts(map[string]string{"action": actionCreateDiscount}),
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(api.SuccessWithData("Discounts loaded successfully", map[string]any{
 		"discounts": discountList,
 		"total":     total,
 		"page":      reqBody.Page,
 		"per_page":  reqBody.PerPage,
+		"urls":      urls,
 	}).ToString()))
 	return ""
 }
