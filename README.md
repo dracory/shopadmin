@@ -1,5 +1,19 @@
 # shopadmin
 
+<img src="https://opengraph.githubassets.com/dracory/shopadmin" />
+
+[![Tests Status](https://github.com/dracory/shopadmin/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/dracory/shopadmin/actions/workflows/tests.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dracory/shopadmin)](https://goreportcard.com/report/github.com/dracory/shopadmin)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/dracory/shopadmin)](https://pkg.go.dev/github.com/dracory/shopadmin)
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). You can find a copy of the license at [https://www.gnu.org/licenses/agpl-3.0.en.html](https://www.gnu.org/licenses/agpl-3.0.txt)
+
+For commercial use, please use my [contact page](https://lesichkov.co.uk/contact) to obtain a commercial license.
+
+## Introduction
+
 Standalone shop admin interface module for Go. Provides a ready-to-use
 admin panel for managing products, categories, discounts, and orders,
 built on top of [`github.com/dracory/shopstore`](https://github.com/dracory/shopstore).
@@ -212,4 +226,10 @@ external services required.
 
 ## License
 
-See the project repository for license information.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). You can find a copy of the license at [https://www.gnu.org/licenses/agpl-3.0.en.html](https://www.gnu.org/licenses/agpl-3.0.txt)
+
+For commercial use, please use my [contact page](https://lesichkov.co.uk/contact) to obtain a commercial license.
+
+# Documentation
+
+For more information, please refer to the [Documentation](./docs/proposal.md).
