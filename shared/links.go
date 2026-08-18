@@ -35,11 +35,6 @@ func (l *Links) Products(params map[string]string) string {
 	return l.url(CONTROLLER_PRODUCTS, params)
 }
 
-// ProductDelete builds the URL for the product delete controller
-func (l *Links) ProductDelete(params map[string]string) string {
-	return l.url(CONTROLLER_PRODUCT_DELETE, params)
-}
-
 // ProductUpdate builds the URL for the product update controller
 func (l *Links) ProductUpdate(params map[string]string) string {
 	return l.url(CONTROLLER_PRODUCT_UPDATE, params)

@@ -15,7 +15,6 @@ func buildControllerRoutes(uiConfig shared.UiConfig, fileManagerURL string) map[
 		shared.CONTROLLER_HOME:            homeHandler(uiConfig, fileManagerURL),
 		shared.CONTROLLER_PRODUCTS:        productManagerHandler(uiConfig),
 		shared.CONTROLLER_PRODUCT_UPDATE:  productUpdateHandler(uiConfig, fileManagerURL),
-		shared.CONTROLLER_PRODUCT_DELETE:  productDeleteHandler(uiConfig),
 		shared.CONTROLLER_CATEGORIES:      categoryManagerHandler(uiConfig),
 		shared.CONTROLLER_CATEGORY_CREATE: categoryCreateHandler(uiConfig),
 		shared.CONTROLLER_CATEGORY_UPDATE: categoryUpdateHandler(uiConfig),
