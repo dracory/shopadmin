@@ -173,17 +173,3 @@ go test ./...
 
 Tests use an in-memory SQLite database via `modernc.org/sqlite` — no
 external services required.
-
-## Dependencies
-
-- [`github.com/dracory/shopstore`](https://github.com/dracory/shopstore) — store interface
-- [`github.com/dracory/cachestore`](https://github.com/dracory/cachestore) — flash messages (optional)
-- [`github.com/dracory/hb`](https://github.com/dracory/hb) — HTML builder
-- [`github.com/dracory/bs`](https://github.com/dracory/bs) — Bootstrap components
-
-**Not** dependent on `userstore` — customer resolution is via
-`CustomerResolverInterface`.
-
-# Documentation
-
-For more information, please refer to the [Documentation](./docs/proposal.md).
