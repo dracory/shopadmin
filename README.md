@@ -150,21 +150,6 @@ admin, _ := shopadmin.New(shopadmin.AdminOptions{
 The anonymous struct matches `cmsstore/admin` exactly, so you can reuse
 your existing cmsstore layout function.
 
-## Authentication
-
-Provide an `AuthUserID` function to gate access. If it returns `""`, the
-request is redirected to `AdminHomeURL`:
-
-```go
-admin, _ := shopadmin.New(shopadmin.AdminOptions{
-    Store:      store,
-    Logger:     logger,
-    AuthUserID: func(r *http.Request) string {
-        // return authenticated user ID, or ""
-    },
-})
-```
-
 ## Testing
 
 ```bash
