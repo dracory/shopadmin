@@ -49,11 +49,13 @@ type AdminOptions struct {
 	CustomerResolver CustomerResolverInterface
 
 	// FuncLayout is an optional function to render the admin interface
-	// inside your own layout (branding, menus, etc.).
+	// inside your own layout (branding, menus, etc.). It receives the
+	// request and response writer so the host project can access request
+	// context (auth user, locale, etc.) when rendering the layout.
 	// If nil, a default bare-bones HTML page is used (Bootstrap + Vue CDN).
-	// Uses anonymous struct to match cmsstore/admin exactly, so consumers
-	// can reuse their cmsstore layout function for shopadmin.
-	FuncLayout func(title string, body string, options struct {
+	// Uses anonymous struct to match blogadmin exactly, so consumers
+	// can reuse their blogadmin layout function for shopadmin.
+	FuncLayout func(w http.ResponseWriter, r *http.Request, title string, body string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -84,7 +86,7 @@ type admin struct {
 	store            shopstore.StoreInterface
 	logger           *slog.Logger
 	customerResolver CustomerResolverInterface
-	funcLayout       func(title string, body string, options struct {
+	funcLayout       func(w http.ResponseWriter, r *http.Request, title string, body string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -209,7 +211,7 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 	// If a custom layout is provided, try it first (fixes #14 — avoids
 	// computing the default layout when FuncLayout is set)
 	if a.funcLayout != nil {
-		custom := a.funcLayout(webpageTitle, webpageHtml, options)
+		custom := a.funcLayout(w, r, webpageTitle, webpageHtml, options)
 		if custom != "" {
 			if w != nil {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")

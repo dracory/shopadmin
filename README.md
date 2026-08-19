@@ -136,13 +136,13 @@ etc.), provide `FuncLayout`:
 admin, _ := shopadmin.New(shopadmin.AdminOptions{
     Store:  store,
     Logger: logger,
-    FuncLayout: func(title, body string, opts struct {
+    FuncLayout: func(w http.ResponseWriter, r *http.Request, title, body string, opts struct {
         Styles     []string
         StyleURLs  []string
         Scripts    []string
         ScriptURLs []string
     }) string {
-        return myLayout(title, body, opts)
+        return myLayout(w, r, title, body, opts)
     },
 })
 ```
