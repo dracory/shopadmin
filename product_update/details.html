@@ -8,18 +8,6 @@
     </template>
 
     <template v-else>
-        <!-- Success Message -->
-        <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ successMessage }}
-            <button type="button" class="btn-close" @click="successMessage = ''"></button>
-        </div>
-
-        <!-- Error Message -->
-        <div v-if="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ errorMessage }}
-            <button type="button" class="btn-close" @click="errorMessage = ''"></button>
-        </div>
-
         <!-- Product Details Header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">

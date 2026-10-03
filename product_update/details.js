@@ -23,9 +23,7 @@ function initDetailsApp() {
                 description: '',
                 price: '',
                 quantity: '',
-                memo: '',
-                successMessage: '',
-                errorMessage: ''
+                memo: ''
             };
         },
         watch: {
@@ -41,14 +39,18 @@ function initDetailsApp() {
             loading(newVal) {
                 console.log('Loading changed to:', newVal);
                 if (!newVal) {
-                    console.log('Loading is false, checking Summernote');
-                    if (typeof $ !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
-                        console.log('Summernote exists:', $('#product_description').next('.note-editor').length);
-                        if ($('#product_description').next('.note-editor').length === 0) {
-                            console.log('Summernote gone, re-initializing');
-                            this.initSummernote();
+                    // The description container is inside the v-else block and
+                    // only exists after Vue re-renders with loading=false
+                    this.$nextTick(() => {
+                        console.log('Loading is false, checking Summernote');
+                        if (typeof $ !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
+                            console.log('Summernote exists:', $('#product_description').next('.note-editor').length);
+                            if ($('#product_description').next('.note-editor').length === 0) {
+                                console.log('Summernote gone, re-initializing');
+                                this.initSummernote();
+                            }
                         }
-                    }
+                    });
                 }
             }
         },
@@ -75,14 +77,8 @@ function initDetailsApp() {
                             this.price = data.data.price || '';
                             this.quantity = data.data.quantity || '';
                             this.memo = data.data.memo || '';
-                            
-                            // Initialize Summernote after data is loaded
-                            this.$nextTick(() => {
-                                console.log('Calling initSummernote from loadDetails');
-                                this.initSummernote();
-                            });
                         } else {
-                            this.errorMessage = data.message || 'Failed to load details';
+                            Notiflix.Notify.failure(data.message || 'Failed to load details');
                         }
                     } else {
                         const text = await response.text();
@@ -91,7 +87,7 @@ function initDetailsApp() {
                     }
                 } catch (error) {
                     console.error('Error loading details:', error);
-                    this.errorMessage = 'Failed to load details: ' + error.message;
+                    Notiflix.Notify.failure('Failed to load details: ' + error.message);
                 } finally {
                     this.loading = false;
                 }
@@ -99,38 +95,14 @@ function initDetailsApp() {
 
             async saveDetails() {
                 // Validate form
-                if (!this.status) {
-                    this.errorMessage = 'Status is required';
-                    return;
-                }
-                if (!this.title) {
-                    this.errorMessage = 'Title is required';
-                    return;
-                }
-                if (!this.price) {
-                    this.errorMessage = 'Price is required';
-                    return;
-                }
-                if (!this.quantity) {
-                    this.errorMessage = 'Quantity is required';
-                    return;
-                }
-                if (isNaN(parseFloat(this.price))) {
-                    this.errorMessage = 'Price must be numeric';
-                    return;
-                }
-                if (parseFloat(this.price) < 0) {
-                    this.errorMessage = 'Price cannot be negative';
-                    return;
-                }
-                if (isNaN(parseInt(this.quantity))) {
-                    this.errorMessage = 'Quantity must be numeric';
-                    return;
-                }
-                if (parseInt(this.quantity) < 0) {
-                    this.errorMessage = 'Quantity cannot be negative';
-                    return;
-                }
+                if (!this.status) { Notiflix.Notify.failure('Status is required'); return; }
+                if (!this.title) { Notiflix.Notify.failure('Title is required'); return; }
+                if (!this.price) { Notiflix.Notify.failure('Price is required'); return; }
+                if (!this.quantity) { Notiflix.Notify.failure('Quantity is required'); return; }
+                if (isNaN(parseFloat(this.price))) { Notiflix.Notify.failure('Price must be numeric'); return; }
+                if (parseFloat(this.price) < 0) { Notiflix.Notify.failure('Price cannot be negative'); return; }
+                if (isNaN(parseInt(this.quantity))) { Notiflix.Notify.failure('Quantity must be numeric'); return; }
+                if (parseInt(this.quantity) < 0) { Notiflix.Notify.failure('Quantity cannot be negative'); return; }
 
                 // Sync Summernote content before saving
                 if (typeof $ !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
@@ -158,27 +130,20 @@ function initDetailsApp() {
                     const data = await response.json();
                     console.log('Save response:', data);
                     if (data.status === 'success') {
-                        this.successMessage = data.message || 'Details saved successfully';
-                        this.errorMessage = '';
+                        Notiflix.Notify.success(data.message || 'Details saved successfully');
                         console.log('After save success, description:', this.description);
                         console.log('Checking if Summernote exists:', $('#product_description').next('.note-editor').length);
-                        
-                        setTimeout(() => {
-                            this.successMessage = '';
-                        }, 3000);
                     } else {
-                        this.errorMessage = data.message || 'Failed to save details';
-                        this.successMessage = '';
+                        Notiflix.Notify.failure(data.message || 'Failed to save details');
                     }
                 } catch (error) {
                     console.error('Error saving details:', error);
-                    this.errorMessage = 'Failed to save details: ' + error.message;
-                    this.successMessage = '';
+                    Notiflix.Notify.failure('Failed to save details: ' + error.message);
                 } finally {
                     console.log('Save finally block, loading:', this.loading);
                     this.loading = false;
                     console.log('After loading set to false');
-                    this.initSummernote();
+                    this.$nextTick(() => this.initSummernote());
                 }
             },
 
@@ -238,9 +203,11 @@ function initDetailsApp() {
                         }
                         console.log('Content set, checking if editor exists:', $el.next('.note-editor').length);
                     } else {
-                        // Already initialized, just update the code
-                        console.log('Summernote already initialized, updating code');
-                        if (this.description) {
+                        // Already initialized — only update if the content actually
+                        // differs, otherwise resetting code moves the cursor to the
+                        // start and typing appears reversed
+                        if ($el.summernote('code') !== this.description) {
+                            console.log('Summernote already initialized, updating code');
                             $el.summernote('code', this.description);
                         }
                     }

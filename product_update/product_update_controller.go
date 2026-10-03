@@ -129,10 +129,12 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 			cdn.Jquery_3_7_1(),
 			"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js",
 			cdn.Sweetalert2_10(),
+			cdn.Notiflix_3_2_8(),
 			cdn.VueJs_3(),
 		},
 		StyleURLs: []string{
 			"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css",
+			cdn.Notiflix_3_2_8_CSS(),
 		},
 	})
 }
