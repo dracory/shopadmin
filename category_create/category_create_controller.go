@@ -3,11 +3,11 @@ package category_create
 import (
 	"encoding/json"
 	"net/http"
+	"uuid"
 
 	"github.com/dracory/api"
 	"github.com/dracory/cdn"
 	"github.com/dracory/hb"
-	"github.com/dracory/neat/support/uid"
 	"github.com/dracory/req"
 	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
@@ -123,7 +123,7 @@ func (u *ui) handleCreateCategory(w http.ResponseWriter, r *http.Request) string
 	}
 
 	category := shopstore.NewCategory()
-	category.SetID(uid.GenerateShortID())
+	category.SetID(uuid.NewV7().String())
 	category.SetTitle(reqBody.Title)
 	category.SetDescription(reqBody.Description)
 	category.SetStatus(reqBody.Status)
