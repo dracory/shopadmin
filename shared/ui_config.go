@@ -37,11 +37,41 @@ type CustomerResolverInterface interface {
 // Customer resolution is via CustomerResolverInterface rather than a
 // userstore dependency, keeping shopadmin decoupled from any specific
 // auth/user-management package.
+// ProductSectionPosition represents placement location for custom sections.
+type ProductSectionPosition string
+
+const (
+	PositionTop        ProductSectionPosition = "top"
+	PositionBeforeForm ProductSectionPosition = "before_form"
+	PositionAfterForm  ProductSectionPosition = "after_form"
+	PositionSidebar    ProductSectionPosition = "sidebar"
+	PositionBottom     ProductSectionPosition = "bottom"
+)
+
+// ProductSection represents custom markup, CSS, JS, and external assets.
+type ProductSection struct {
+	ID       string
+	Position ProductSectionPosition
+	HTML     string
+	CSS      string
+	JS       string
+	CSSURLs  []string
+	JSURLs   []string
+}
+
+// ProductSectionRenderer is a callback that generates a ProductSection.
+type ProductSectionRenderer func(
+	r *http.Request,
+	product shopstore.ProductInterface,
+) (ProductSection, error)
+
 type UiConfig struct {
-	Store            shopstore.StoreInterface
-	Logger           *slog.Logger
-	CustomerResolver CustomerResolverInterface
-	Layout           func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	Store                 shopstore.StoreInterface
+	Logger                *slog.Logger
+	CustomerResolver      CustomerResolverInterface
+	ProductViewSections   []ProductSectionRenderer
+	ProductUpdateSections []ProductSectionRenderer
+	Layout                func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string

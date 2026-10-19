@@ -78,16 +78,49 @@ func (u *ui) renderPage(r *http.Request) string {
 	jsContent = strings.ReplaceAll(jsContent, "urlProductDelete", "'"+urlProductDeleteJS+"'")
 	jsContent = strings.ReplaceAll(jsContent, "PRODUCT_ID", "'"+productIDJS+"'")
 
+	// Fetch product to pass to section renderers
+	product, _ := u.Store().ProductFindByID(r.Context(), productID)
+
+	sections := shared.ProcessProductSections(u.ProductViewSections(), r, product, u.Logger())
+
+	topSection := sections.RenderPosition(shared.PositionTop)
+	beforeFormSection := sections.RenderPosition(shared.PositionBeforeForm)
+	afterFormSection := sections.RenderPosition(shared.PositionAfterForm)
+	sidebarSection := sections.RenderPosition(shared.PositionSidebar)
+	bottomSection := sections.RenderPosition(shared.PositionBottom)
+
 	vueCDN := hb.Script("").Src(cdn.VueJs_3())
+
+	mainView := hb.Div().
+		Child(vueCDN).
+		Child(hb.Raw(htmlContent)).
+		Child(hb.Script(jsContent))
+
+	var body hb.TagInterface
+	if sidebarSection != nil {
+		body = hb.Div().Class("row").
+			Child(hb.Div().Class("col-lg-8").Child(mainView)).
+			Child(hb.Div().Class("col-lg-4").Child(sidebarSection))
+	} else {
+		body = mainView
+	}
 
 	content := hb.Div().
 		Class("container").
 		Child(heading).
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		Child(vueCDN).
-		Child(hb.Raw(htmlContent)).
-		Child(hb.Script(jsContent))
+		ChildIf(topSection != nil, topSection).
+		ChildIf(beforeFormSection != nil, beforeFormSection).
+		Child(body).
+		ChildIf(afterFormSection != nil, afterFormSection).
+		ChildIf(bottomSection != nil, bottomSection)
+
+	styleURLs := []string{cdn.Notiflix_3_2_8_CSS()}
+	styleURLs = append(styleURLs, sections.Options.StyleURLs...)
+
+	scriptURLs := []string{cdn.Notiflix_3_2_8()}
+	scriptURLs = append(scriptURLs, sections.Options.ScriptURLs...)
 
 	return u.Layout(nil, r, "View Product | Shop", content.ToHTML(), struct {
 		Styles     []string
@@ -95,11 +128,9 @@ func (u *ui) renderPage(r *http.Request) string {
 		Scripts    []string
 		ScriptURLs []string
 	}{
-		ScriptURLs: []string{
-			cdn.Notiflix_3_2_8(),
-		},
-		StyleURLs: []string{
-			cdn.Notiflix_3_2_8_CSS(),
-		},
+		Styles:     sections.Options.Styles,
+		StyleURLs:  styleURLs,
+		Scripts:    sections.Options.Scripts,
+		ScriptURLs: scriptURLs,
 	})
 }

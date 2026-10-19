@@ -126,6 +126,53 @@ filtering is disabled — no panic, no error.
 
 See [`docs/proposal.md`](docs/proposal.md) for the full design rationale.
 
+## Custom Sections for Product View and Update Pages
+
+`shopadmin` allows host applications to inject custom content and dynamic UI components into product view and product update pages via `ProductViewSections` and `ProductUpdateSections` on `AdminOptions`.
+
+### Supported Positions
+
+- `shopadmin.PositionTop` (`"top"`): Rendered at the top of the page content.
+- `shopadmin.PositionBeforeForm` (`"before_form"`): Rendered before the main update form / card.
+- `shopadmin.PositionAfterForm` (`"after_form"`): Rendered after the main update form / card.
+- `shopadmin.PositionSidebar` (`"sidebar"`): Rendered in a sidebar column alongside the product card.
+- `shopadmin.PositionBottom` (`"bottom"`): Rendered at the bottom of the page container.
+
+### Registering Custom Sections
+
+You can register section renderers that receive the current `*http.Request` and `shopstore.ProductInterface`:
+
+```go
+admin, _ := shopadmin.New(shopadmin.AdminOptions{
+    Store:  store,
+    Logger: logger,
+    ProductViewSections: []shopadmin.ProductSectionRenderer{
+        // Simple HTML banner section
+        func(r *http.Request, p shopstore.ProductInterface) (shopadmin.ProductSection, error) {
+            return shopadmin.ProductSection{
+                ID:       "inventory-notice",
+                Position: shopadmin.PositionTop,
+                HTML:     `<div class="alert alert-info">Viewing Product ID: ` + p.GetID() + `</div>`,
+            }, nil
+        },
+    },
+    ProductUpdateSections: []shopadmin.ProductSectionRenderer{
+        // Advanced interactive widget section with CSS, JS, and third-party assets
+        func(r *http.Request, p shopstore.ProductInterface) (shopadmin.ProductSection, error) {
+            return shopadmin.ProductSection{
+                ID:       "analytics-widget",
+                Position: shopadmin.PositionSidebar,
+                HTML:     `<div id="product-chart-card" class="card"><div class="card-body"><canvas id="salesChart"></canvas></div></div>`,
+                CSS:      `#product-chart-card { margin-top: 10px; }`,
+                JS:       `new Chart(document.getElementById('salesChart'), { type: 'line', data: { ... } });`,
+                CSSURLs:  []string{"https://cdn.jsdelivr.net/npm/chart.js/dist/chart.min.css"},
+                JSURLs:   []string{"https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"},
+            }, nil
+        },
+    },
+})
+```
+
 ## Custom Layout
 
 By default, shopadmin renders a bare-bones HTML page with Bootstrap and

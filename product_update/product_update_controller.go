@@ -119,7 +119,24 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 		return component.Render().ToHTML()
 	}
 
-	pageContent := u.page(r, product, view, productID)
+	sections := shared.ProcessProductSections(u.ProductUpdateSections(), r, product, u.Logger())
+
+	pageContent := u.page(r, product, view, productID, sections)
+
+	styleURLs := []string{
+		"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css",
+		cdn.Notiflix_3_2_8_CSS(),
+	}
+	styleURLs = append(styleURLs, sections.Options.StyleURLs...)
+
+	scriptURLs := []string{
+		cdn.Jquery_3_7_1(),
+		"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js",
+		cdn.Sweetalert2_10(),
+		cdn.Notiflix_3_2_8(),
+		cdn.VueJs_3(),
+	}
+	scriptURLs = append(scriptURLs, sections.Options.ScriptURLs...)
 
 	return u.Layout(w, r, "Edit Product | Shop", pageContent.ToHTML(), struct {
 		Styles     []string
@@ -127,21 +144,14 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 		Scripts    []string
 		ScriptURLs []string
 	}{
-		ScriptURLs: []string{
-			cdn.Jquery_3_7_1(),
-			"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js",
-			cdn.Sweetalert2_10(),
-			cdn.Notiflix_3_2_8(),
-			cdn.VueJs_3(),
-		},
-		StyleURLs: []string{
-			"https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css",
-			cdn.Notiflix_3_2_8_CSS(),
-		},
+		Styles:     sections.Options.Styles,
+		StyleURLs:  styleURLs,
+		Scripts:    sections.Options.Scripts,
+		ScriptURLs: scriptURLs,
 	})
 }
 
-func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view string, productID string) hb.TagInterface {
+func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view string, productID string, sections shared.ProcessedSections) hb.TagInterface {
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{Name: "Home", URL: shared.AdminHomeURL(r)},
 		{Name: "Shop", URL: shared.URLR(r, shared.CONTROLLER_HOME, nil)},
@@ -244,13 +254,35 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 				Child(body),
 		)
 
+	topSection := sections.RenderPosition(shared.PositionTop)
+	beforeFormSection := sections.RenderPosition(shared.PositionBeforeForm)
+	afterFormSection := sections.RenderPosition(shared.PositionAfterForm)
+	sidebarSection := sections.RenderPosition(shared.PositionSidebar)
+	bottomSection := sections.RenderPosition(shared.PositionBottom)
+
+	mainCardGroup := hb.Div().
+		ChildIf(beforeFormSection != nil, beforeFormSection).
+		Child(card).
+		ChildIf(afterFormSection != nil, afterFormSection)
+
+	var middleLayout hb.TagInterface
+	if sidebarSection != nil {
+		middleLayout = hb.Div().Class("row").
+			Child(hb.Div().Class("col-lg-8").Child(mainCardGroup)).
+			Child(hb.Div().Class("col-lg-4").Child(sidebarSection))
+	} else {
+		middleLayout = mainCardGroup
+	}
+
 	return hb.Div().
 		Class("container").
 		Child(heading).
 		Child(breadcrumbs).
+		ChildIf(topSection != nil, topSection).
 		Child(productTitle).
 		Child(tabs).
-		Child(card)
+		Child(middleLayout).
+		ChildIf(bottomSection != nil, bottomSection)
 }
 
 // writeJSON safely writes a JSON response, fixing bug #7 where error

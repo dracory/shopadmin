@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/dracory/shopadmin/testutils"
+	"github.com/dracory/shopstore"
 	_ "modernc.org/sqlite"
 )
 
@@ -349,6 +350,233 @@ func TestContentTypeHeaders(t *testing.T) {
 		}
 	})
 }
+
+func TestProductView_CustomSections(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	p := shopstore.NewProduct()
+	p.SetTitle("Widget A")
+	p.SetStatus("active")
+	if err := store.ProductCreate(context.Background(), p); err != nil {
+		t.Fatalf("Failed to create product: %v", err)
+	}
+
+	a, err := New(AdminOptions{
+		Store:  store,
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		ProductViewSections: []ProductSectionRenderer{
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				return ProductSection{
+					ID:       "top-info",
+					Position: PositionTop,
+					HTML:     "<div id='custom-top'>Top Notice for " + p.GetTitle() + "</div>",
+					CSS:      ".custom-top-class { color: red; }",
+					JS:       "console.log('top section js');",
+					CSSURLs:  []string{"https://cdn.example.com/custom-top.css"},
+					JSURLs:   []string{"https://cdn.example.com/custom-top.js"},
+				}, nil
+			},
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				return ProductSection{
+					ID:       "sidebar-widget",
+					Position: PositionSidebar,
+					HTML:     "<div id='custom-sidebar'>Sidebar Content</div>",
+				}, nil
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_view&product_id="+p.GetID(), nil)
+	rr := httptest.NewRecorder()
+
+	a.Handle(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+
+	body := rr.Body.String()
+
+	if !strings.Contains(body, "Top Notice for Widget A") {
+		t.Errorf("Expected body to contain custom top section HTML")
+	}
+	if !strings.Contains(body, "Sidebar Content") {
+		t.Errorf("Expected body to contain custom sidebar section HTML")
+	}
+	if !strings.Contains(body, ".custom-top-class { color: red; }") {
+		t.Errorf("Expected body to contain custom CSS")
+	}
+	if !strings.Contains(body, "console.log('top section js');") {
+		t.Errorf("Expected body to contain custom JS")
+	}
+	if !strings.Contains(body, "https://cdn.example.com/custom-top.css") {
+		t.Errorf("Expected body to contain CSS URL")
+	}
+	if !strings.Contains(body, "https://cdn.example.com/custom-top.js") {
+		t.Errorf("Expected body to contain JS URL")
+	}
+}
+
+func TestProductUpdate_CustomSections(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	p := shopstore.NewProduct()
+	p.SetTitle("Widget B")
+	p.SetStatus("active")
+	if err := store.ProductCreate(context.Background(), p); err != nil {
+		t.Fatalf("Failed to create product: %v", err)
+	}
+
+	var executedOrder []string
+
+	a, err := New(AdminOptions{
+		Store:  store,
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		ProductUpdateSections: []ProductSectionRenderer{
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				executedOrder = append(executedOrder, "sec1")
+				return ProductSection{
+					ID:       "sec1-top",
+					Position: PositionTop,
+					HTML:     "<div>Update Top Section</div>",
+				}, nil
+			},
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				executedOrder = append(executedOrder, "sec2")
+				return ProductSection{
+					ID:       "sec2-before-form",
+					Position: PositionBeforeForm,
+					HTML:     "<div>Update Before Form Section</div>",
+				}, nil
+			},
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				executedOrder = append(executedOrder, "sec3")
+				return ProductSection{
+					ID:       "sec3-after-form",
+					Position: PositionAfterForm,
+					HTML:     "<div>Update After Form Section</div>",
+				}, nil
+			},
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				executedOrder = append(executedOrder, "sec4")
+				return ProductSection{
+					ID:       "sec4-sidebar",
+					Position: PositionSidebar,
+					HTML:     "<div>Update Sidebar Section</div>",
+				}, nil
+			},
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				executedOrder = append(executedOrder, "sec5")
+				return ProductSection{
+					ID:       "sec5-bottom",
+					Position: PositionBottom,
+					HTML:     "<div>Update Bottom Section</div>",
+				}, nil
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_update&product_id="+p.GetID(), nil)
+	rr := httptest.NewRecorder()
+
+	a.Handle(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+
+	body := rr.Body.String()
+
+	expectedSubstrings := []string{
+		"Update Top Section",
+		"Update Before Form Section",
+		"Update After Form Section",
+		"Update Sidebar Section",
+		"Update Bottom Section",
+	}
+
+	for _, s := range expectedSubstrings {
+		if !strings.Contains(body, s) {
+			t.Errorf("Expected body to contain '%s'", s)
+		}
+	}
+
+	expectedOrder := []string{"sec1", "sec2", "sec3", "sec4", "sec5"}
+	if len(executedOrder) != len(expectedOrder) {
+		t.Fatalf("Expected %d executed callbacks, got %d", len(expectedOrder), len(executedOrder))
+	}
+	for i, name := range expectedOrder {
+		if executedOrder[i] != name {
+			t.Errorf("Expected callback #%d to be %s, got %s", i, name, executedOrder[i])
+		}
+	}
+}
+
+func TestCustomSections_NilAndErrorHandling(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	p := shopstore.NewProduct()
+	p.SetTitle("Widget C")
+	p.SetStatus("active")
+	if err := store.ProductCreate(context.Background(), p); err != nil {
+		t.Fatalf("Failed to create product: %v", err)
+	}
+
+	a, err := New(AdminOptions{
+		Store:  store,
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		ProductViewSections: []ProductSectionRenderer{
+			nil,
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				return ProductSection{}, errTestError
+			},
+			func(r *http.Request, p shopstore.ProductInterface) (ProductSection, error) {
+				return ProductSection{
+					ID:   "valid-sec",
+					HTML: "<div>Valid Section</div>",
+				}, nil
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_view&product_id="+p.GetID(), nil)
+	rr := httptest.NewRecorder()
+
+	a.Handle(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "Valid Section") {
+		t.Errorf("Expected body to contain 'Valid Section'")
+	}
+}
+
+var errTestError = &testError{}
+
+type testError struct{}
+
+func (e *testError) Error() string { return "test renderer error" }
 
 func min(a, b int) int {
 	if a < b {
