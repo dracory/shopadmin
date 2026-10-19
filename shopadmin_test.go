@@ -287,6 +287,69 @@ func TestCustomerResolver_PassedThrough(t *testing.T) {
 	}
 }
 
+func TestContentTypeHeaders(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	a, err := New(AdminOptions{
+		Store:  store,
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	t.Run("Page rendering sets text/html", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=discount_update&discount_id=nonexistent", nil)
+		rr := httptest.NewRecorder()
+
+		a.Handle(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", rr.Code)
+		}
+
+		ct := rr.Header().Get("Content-Type")
+		if !strings.HasPrefix(ct, "text/html") {
+			t.Errorf("Expected Content-Type text/html, got %s", ct)
+		}
+	})
+
+	t.Run("AJAX action sets application/json", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/admin/shop?action=load-details&controller=discount_update&discount_id=nonexistent", nil)
+		rr := httptest.NewRecorder()
+
+		a.Handle(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", rr.Code)
+		}
+
+		ct := rr.Header().Get("Content-Type")
+		if ct != "application/json" {
+			t.Errorf("Expected Content-Type application/json, got %s", ct)
+		}
+	})
+
+	t.Run("Home AJAX action load-stats sets application/json", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/admin/shop?action=load-stats&controller=home", nil)
+		rr := httptest.NewRecorder()
+
+		a.Handle(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", rr.Code)
+		}
+
+		ct := rr.Header().Get("Content-Type")
+		if ct != "application/json" {
+			t.Errorf("Expected Content-Type application/json, got %s", ct)
+		}
+	})
+}
+
 func min(a, b int) int {
 	if a < b {
 		return a
