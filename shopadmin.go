@@ -214,7 +214,9 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 		custom := a.funcLayout(w, r, webpageTitle, webpageHtml, options)
 		if custom != "" {
 			if w != nil {
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				if w.Header().Get("Content-Type") == "" {
+					w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				}
 				_, _ = w.Write([]byte(custom))
 				return ""
 			}
@@ -227,7 +229,9 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 	// w may be nil when a subcontroller calls Layout() to get the HTML
 	// string without writing to the response (e.g. home controller).
 	if w != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if w.Header().Get("Content-Type") == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		}
 		_, _ = w.Write([]byte(webpage))
 		return ""
 	}

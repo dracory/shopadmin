@@ -36,7 +36,9 @@ func UI(config shared.UiConfig, fileManagerURL string) UiInterface {
 func (u *ui) ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	html := u.Handler(w, r)
 	if html != "" {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if w.Header().Get("Content-Type") == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		}
 		_, _ = w.Write([]byte(html))
 	}
 }
