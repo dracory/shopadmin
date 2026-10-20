@@ -74,6 +74,10 @@ type AdminOptions struct {
 	// AuthUserID returns the authenticated user ID from the request.
 	// If it returns "", the user is treated as unauthenticated.
 	AuthUserID func(r *http.Request) string
+
+	// Custom sections for product view and update pages
+	ProductViewSections   []ProductSectionRenderer
+	ProductUpdateSections []ProductSectionRenderer
 }
 
 // AdminInterface defines the interface for the shop admin
@@ -83,10 +87,12 @@ type AdminInterface interface {
 
 // admin implements AdminInterface
 type admin struct {
-	store            shopstore.StoreInterface
-	logger           *slog.Logger
-	customerResolver CustomerResolverInterface
-	funcLayout       func(w http.ResponseWriter, r *http.Request, title string, body string, options struct {
+	store                 shopstore.StoreInterface
+	logger                *slog.Logger
+	customerResolver      CustomerResolverInterface
+	productViewSections   []ProductSectionRenderer
+	productUpdateSections []ProductSectionRenderer
+	funcLayout            func(w http.ResponseWriter, r *http.Request, title string, body string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -118,14 +124,16 @@ func New(opts AdminOptions) (AdminInterface, error) {
 	}
 
 	a := &admin{
-		store:            opts.Store,
-		logger:           opts.Logger,
-		customerResolver: opts.CustomerResolver,
-		funcLayout:       opts.FuncLayout,
-		adminHomeURL:     opts.AdminHomeURL,
-		shopAdminURL:     opts.ShopAdminURL,
-		fileManagerURL:   opts.FileManagerURL,
-		authUserID:       opts.AuthUserID,
+		store:                 opts.Store,
+		logger:                opts.Logger,
+		customerResolver:      opts.CustomerResolver,
+		productViewSections:   opts.ProductViewSections,
+		productUpdateSections: opts.ProductUpdateSections,
+		funcLayout:            opts.FuncLayout,
+		adminHomeURL:          opts.AdminHomeURL,
+		shopAdminURL:          opts.ShopAdminURL,
+		fileManagerURL:        opts.FileManagerURL,
+		authUserID:            opts.AuthUserID,
 	}
 
 	// Build routes once at construction time (fixes perf issue #4
@@ -170,10 +178,12 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 // buildRoutes creates the handler dispatch map once at construction time.
 func (a *admin) buildRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	uiConfig := shared.UiConfig{
-		Store:            a.store,
-		Logger:           a.logger,
-		CustomerResolver: a.customerResolver,
-		Layout:           a.render,
+		Store:                 a.store,
+		Logger:                a.logger,
+		CustomerResolver:      a.customerResolver,
+		ProductViewSections:   a.productViewSections,
+		ProductUpdateSections: a.productUpdateSections,
+		Layout:                a.render,
 	}
 
 	return map[string]func(w http.ResponseWriter, r *http.Request){

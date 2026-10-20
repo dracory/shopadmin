@@ -19,6 +19,9 @@ type UiInterface interface {
 	// CustomerResolver returns the CustomerResolverInterface, or nil.
 	CustomerResolver() CustomerResolverInterface
 
+	ProductViewSections() []ProductSectionRenderer
+	ProductUpdateSections() []ProductSectionRenderer
+
 	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
