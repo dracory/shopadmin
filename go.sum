@@ -16,12 +16,12 @@ github.com/dracory/dataobject v1.7.0 h1:vbk1SO4sZTmOQruO8XoFSQ1jFC6AbMJ4FmF76ILM
 github.com/dracory/dataobject v1.7.0/go.mod h1:/Dbjmrg9VOoWDZumWfM5Gp/8E2fFAa3gnR2wCwixJk4=
 github.com/dracory/hb v1.88.0 h1:PpxQ9IGTy/L8fZ2iQxTUhieB6u16sluuw/TNxYUcHPs=
 github.com/dracory/hb v1.88.0/go.mod h1:ixoy4T+Vr3HADrxkt5MhXQnkOWo0NSuN5WYPXfKjZCs=
-github.com/dracory/neat v0.60.1 h1:fTrt/x9KIDtkJ4CUNWIw/qp/FI8Vvpgvxa5PZmvqvy0=
-github.com/dracory/neat v0.60.1/go.mod h1:G+QJ+FAV3AGok8+cImKIt6kGKSNkrzrggK+9D6zJDjk=
+github.com/dracory/neat v0.61.0 h1:r4y5OPcaJY+iMdlw57CFta6BHToEoMT1pet5T1ccA0E=
+github.com/dracory/neat v0.61.0/go.mod h1:UXvxqury++bQeOxCYrhn3aecITIrz5G+Q6H6s890mTk=
 github.com/dracory/req v0.1.0 h1:5mKYnPiCUJG/JQlE/9nxk3OSH+rs8tr45ngg0LwDXsY=
 github.com/dracory/req v0.1.0/go.mod h1:XxIjAncVAKKNaVtO+4Qmd3mDfC0NIBVXqQPwwb4qhHs=
-github.com/dracory/shopstore v1.27.0 h1:UC89nbhYeNuLLbNFFHUQw/D6Z6+INzanpwBzieyBOjg=
-github.com/dracory/shopstore v1.27.0/go.mod h1:+y5N16Ak3L8sl5k6hbnBW3YMMXscZrbl81jR3Sy0oRs=
+github.com/dracory/shopstore v1.27.1 h1:UjEAt+7Zq+Wul1Gkixad9AeB24WQ/BvO5yn/jFg08Ho=
+github.com/dracory/shopstore v1.27.1/go.mod h1:BulCdpx1HjZOSmuXvd54gaC6k4JB5l70y1v/GggYv0k=
 github.com/dracory/str v0.19.0 h1:tcQ+znPofNE+OO4mPM0QVDCOYCLkf+DMyVmUBrnoJSw=
 github.com/dracory/str v0.19.0/go.mod h1:uCrCZWzm0h8eDxckF0ydWqF1hM1Ro1kZBqhi4GOff2w=
 github.com/dracory/uid v1.14.0 h1:lou3jIYobFNiu/Xn1zyD6Hzelnkz9OuQ0mCg2E+dA4Q=
