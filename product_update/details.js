@@ -121,8 +121,10 @@ function initDetailsApp() {
                             status: this.status,
                             title: this.title,
                             description: this.description,
-                            price: this.price,
-                            quantity: this.quantity,
+                            // <input type="number"> auto-casts v-model to a
+                            // number; send strings to match the API contract
+                            price: String(this.price),
+                            quantity: String(this.quantity),
                             memo: this.memo
                         })
                     });

@@ -728,8 +728,8 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 		Status      string          `json:"status"`
 		Title       string          `json:"title"`
 		Description json.RawMessage `json:"description"`
-		Price       string          `json:"price"`
-		Quantity    string          `json:"quantity"`
+		Price       json.RawMessage `json:"price"`
+		Quantity    json.RawMessage `json:"quantity"`
 		Memo        string          `json:"memo"`
 	}
 	bodyBytes, _ := io.ReadAll(r.Body)
@@ -752,6 +752,12 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 		}
 	}
 
+	// Price and quantity may arrive as a JSON string or a JSON number.
+	// Vue's v-model on <input type="number"> auto-casts the value to a
+	// number, so coercing here prevents "Invalid request body" errors.
+	price := rawMessageToString(reqBody.Price)
+	quantity := rawMessageToString(reqBody.Quantity)
+
 	product, err := shopStore.ProductFindByID(ctx, productID)
 	if err != nil {
 		u.Logger().Error("Failed to load product", "error", err)
@@ -767,8 +773,8 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 	product.SetStatus(reqBody.Status)
 	product.SetTitle(reqBody.Title)
 	product.SetDescription(description)
-	product.SetPrice(reqBody.Price)
-	product.SetQuantity(reqBody.Quantity)
+	product.SetPrice(price)
+	product.SetQuantity(quantity)
 	product.SetMemo(reqBody.Memo)
 
 	err = shopStore.ProductUpdate(ctx, product)
@@ -780,4 +786,17 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 
 	writeJSON(w, "success", "Details saved successfully", nil)
 	return ""
+}
+
+// rawMessageToString coerces a JSON value to a string. It accepts both
+// JSON strings ("25") and JSON numbers (25), returning "" for empty input.
+func rawMessageToString(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return s
+	}
+	return string(raw)
 }
