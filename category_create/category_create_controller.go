@@ -76,9 +76,9 @@ func (u *ui) renderPage(r *http.Request) string {
 	content := hb.Div().
 		Class("container").
 		Class("py-4").
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Categories. Create Category")).
-		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(initScript).
 		Child(hb.Div().ID("app"))
 

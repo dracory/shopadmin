@@ -106,9 +106,9 @@ func (u *ui) renderPage(r *http.Request) string {
 	content := hb.Div().
 		Class("container").
 		Class("py-4").
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Products. View Product")).
-		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		ChildIf(topSection != nil, topSection).
 		ChildIf(beforeFormSection != nil, beforeFormSection).
 		Child(body).

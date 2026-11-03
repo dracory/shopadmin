@@ -141,9 +141,9 @@ func (u *ui) page(r *http.Request, discount shopstore.DiscountInterface, discoun
 	return hb.Div().
 		Class("container").
 		Class("py-4").
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Discounts. Edit Discount", buttonCancel)).
-		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(discountTitle).
 		Child(card)
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cast"
 )
 
-// SectionNav renders the shop admin section navigation as tabs, matching the
-// nav-tabs pattern used across the admin packages (useradmin, blogadmin).
+// SectionNav renders the shop admin section navigation as pills, matching the
+// nav-pills pattern used across the admin packages (useradmin, blogadmin).
 // The active tab is derived from the ?controller= query parameter.
 // Orders, Products, and Discounts tabs show record counts as badges when the
 // store is available. The File Manager tab is only shown when a file manager
@@ -78,8 +78,20 @@ func SectionNav(r *http.Request, store shopstore.StoreInterface, logger *slog.Lo
 		tabs = append(tabs, tab("File Manager", "files", fileManagerURL, -1))
 	}
 
-	ulNav := hb.UL().Class("nav nav-pills justify-content-center").Children(tabs)
+	ulNav := hb.UL().
+		Class("nav nav-pills p-1 justify-content-center flex-grow-1").
+		Children(tabs)
 
-	return hb.Div().Class("card card-default mt-3 mb-3").Child(
-		hb.Div().Class("card-body").Style("padding: 2px;").Child(ulNav))
+	label := hb.Span().
+		Class("fw-bolder text-uppercase ms-3 me-3").
+		Text("Shop").
+		Child(hb.I().Class("bi bi-chevron-right ms-2"))
+
+	return hb.Div().
+		Class("card card-default mt-3 mb-4 bg-primary-subtle").
+		Child(hb.Div().
+			Class("card-body d-flex align-items-center").
+			Style("padding: 2px;").
+			Child(label).
+			Child(ulNav))
 }

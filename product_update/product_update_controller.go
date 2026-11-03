@@ -273,9 +273,9 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 	return hb.Div().
 		Class("container").
 		Class("py-4").
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Products. Edit Product", buttonCancel)).
-		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		ChildIf(topSection != nil, topSection).
 		Child(productTitle).
 		Child(tabs).
