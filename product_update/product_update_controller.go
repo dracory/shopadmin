@@ -160,14 +160,10 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 	})
 
 	buttonCancel := hb.Hyperlink().
-		Class("btn btn-secondary ms-2 float-end").
+		Class("btn btn-secondary").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
 		Href(shared.URLR(r, shared.CONTROLLER_PRODUCTS, nil))
-
-	heading := hb.Heading1().
-		HTML("Shop. Product. Edit Product").
-		Child(buttonCancel)
 
 	linksHelper := shared.NewLinksFromRequest(r)
 
@@ -276,8 +272,10 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 
 	return hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
+		Child(shared.PageHeader("Products. Edit Product", buttonCancel)).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		ChildIf(topSection != nil, topSection).
 		Child(productTitle).
 		Child(tabs).

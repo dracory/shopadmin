@@ -52,8 +52,6 @@ func (u *ui) renderPage(r *http.Request) string {
 		{Name: "Order Details", URL: shared.URLR(r, shared.CONTROLLER_ORDER_DETAILS, map[string]string{"order_id": orderID})},
 	})
 
-	heading := hb.Heading1().HTML("Order Details: " + orderIDHTML)
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	urlOrders := linksHelper.Orders(map[string]string{})
 	urlLoadOrderDetails := linksHelper.OrderDetails(map[string]string{"action": "load-order-details", "order_id": orderID})
@@ -74,9 +72,10 @@ func (u *ui) renderPage(r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Orders. Order Details")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(vueCDN).
 		Child(hb.Raw(htmlContent)).
 		Child(hb.Script(jsContent))

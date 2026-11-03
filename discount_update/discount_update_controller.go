@@ -111,14 +111,10 @@ func (u *ui) page(r *http.Request, discount shopstore.DiscountInterface, discoun
 	})
 
 	buttonCancel := hb.Hyperlink().
-		Class("btn btn-secondary ms-2 float-end").
+		Class("btn btn-secondary").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
 		Href(shared.URLR(r, shared.CONTROLLER_DISCOUNTS, nil))
-
-	heading := hb.Heading1().
-		HTML("Shop. Discount. Edit Discount").
-		Child(buttonCancel)
 
 	discountTitle := hb.Heading2().
 		Class("mb-3").
@@ -144,8 +140,10 @@ func (u *ui) page(r *http.Request, discount shopstore.DiscountInterface, discoun
 
 	return hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
+		Child(shared.PageHeader("Discounts. Edit Discount", buttonCancel)).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(discountTitle).
 		Child(card)
 }

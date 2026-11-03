@@ -64,8 +64,6 @@ func (u *ui) renderPage(r *http.Request) string {
 		{Name: "Shop", URL: shared.URLR(r, shared.CONTROLLER_HOME, nil)},
 	})
 
-	heading := hb.Heading1().HTML("Shop Dashboard")
-
 	htmlContent, err := homeFiles.ReadFile("home.html")
 	if err != nil {
 		u.Logger().Error("Failed to read home HTML template", "error", err)
@@ -98,9 +96,10 @@ func (u *ui) renderPage(r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Shop. Dashboard")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(vueContainer)
 
 	return u.Layout(nil, r, "Shop | Dashboard", content.ToHTML(), struct {

@@ -52,8 +52,6 @@ func (u *ui) renderPage(r *http.Request) string {
 		{Name: "View Discount", URL: shared.URLR(r, shared.CONTROLLER_DISCOUNT_VIEW, map[string]string{"discount_id": discountID})},
 	})
 
-	heading := hb.Heading1().HTML("View Discount: " + discountIDHTML)
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	urlDiscounts := linksHelper.Discounts(map[string]string{})
 	urlDiscountUpdate := linksHelper.DiscountUpdate(map[string]string{"discount_id": discountID})
@@ -82,9 +80,10 @@ func (u *ui) renderPage(r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Discounts. View Discount")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(vueCDN).
 		Child(hb.Raw(htmlContent)).
 		Child(hb.Script(jsContent))

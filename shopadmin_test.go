@@ -122,8 +122,8 @@ func TestHandle_HomeController(t *testing.T) {
 	}
 
 	body := rr.Body.String()
-	if !strings.Contains(body, "Shop Dashboard") {
-		t.Errorf("Expected body to contain 'Shop Dashboard', got: %s", body[:min(200, len(body))])
+	if !strings.Contains(body, "Shop. Dashboard") {
+		t.Errorf("Expected body to contain 'Shop. Dashboard', got: %s", body[:min(200, len(body))])
 	}
 }
 
@@ -180,8 +180,8 @@ func TestHandle_UnknownControllerFallsBackToHome(t *testing.T) {
 	}
 
 	body := rr.Body.String()
-	if !strings.Contains(body, "Shop Dashboard") {
-		t.Errorf("Expected fallback to home page with 'Shop Dashboard'")
+	if !strings.Contains(body, "Shop. Dashboard") {
+		t.Errorf("Expected fallback to home page with 'Shop. Dashboard'")
 	}
 }
 

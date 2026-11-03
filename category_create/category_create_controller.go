@@ -68,8 +68,6 @@ func (u *ui) renderPage(r *http.Request) string {
 		{Name: "Create Category", URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("Create Category")
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	initScript := hb.Script(`
 		const urlCreateCategory = '` + linksHelper.CategoryCreate(map[string]string{"action": actionCreateCategory}) + `';
@@ -77,9 +75,10 @@ func (u *ui) renderPage(r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Categories. Create Category")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(initScript).
 		Child(hb.Div().ID("app"))
 

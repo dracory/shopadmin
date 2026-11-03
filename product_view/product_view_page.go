@@ -52,8 +52,6 @@ func (u *ui) renderPage(r *http.Request) string {
 		{Name: "View Product", URL: shared.URLR(r, shared.CONTROLLER_PRODUCT_VIEW, map[string]string{"product_id": productID})},
 	})
 
-	heading := hb.Heading1().HTML("View Product: " + productIDHTML)
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	urlProducts := linksHelper.Products(map[string]string{})
 	urlProductUpdate := linksHelper.ProductUpdate(map[string]string{"product_id": productID})
@@ -107,9 +105,10 @@ func (u *ui) renderPage(r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Products. View Product")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		ChildIf(topSection != nil, topSection).
 		ChildIf(beforeFormSection != nil, beforeFormSection).
 		Child(body).

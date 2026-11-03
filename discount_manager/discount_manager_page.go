@@ -30,8 +30,6 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		{Name: "Discounts", URL: shared.URLR(r, shared.CONTROLLER_DISCOUNTS, nil)},
 	})
 
-	heading := hb.Heading1().HTML("Discount Manager")
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	urls := map[string]string{
 		"loadDiscounts":  linksHelper.Discounts(map[string]string{"action": actionLoadDiscounts}),
@@ -43,9 +41,10 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Discounts. Discount Manager")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(urlsScript).
 		Child(hb.Raw(discountsHTML)).
 		Child(hb.Script(discountsJS))

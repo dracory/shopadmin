@@ -74,8 +74,6 @@ func (u *ui) renderPage(r *http.Request) string {
 		{Name: "Update Category", URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("Update Category")
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	initScript := hb.Script(`
 		const urlLoadCategory = '` + linksHelper.CategoryUpdate(map[string]string{"action": actionLoadCategory, "category_id": categoryID}) + `';
@@ -85,9 +83,10 @@ func (u *ui) renderPage(r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Categories. Update Category")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(initScript).
 		Child(hb.Div().ID("app"))
 

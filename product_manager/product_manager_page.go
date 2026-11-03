@@ -30,8 +30,6 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		{Name: "Products", URL: shared.URLR(r, shared.CONTROLLER_PRODUCTS, nil)},
 	})
 
-	heading := hb.Heading1().HTML("Product Manager")
-
 	linksHelper := shared.NewLinksFromRequest(r)
 	urls := map[string]string{
 		"loadProducts":          linksHelper.Products(map[string]string{"action": actionLoadProducts}),
@@ -47,9 +45,10 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 
 	content := hb.Div().
 		Class("container").
-		Child(heading).
+		Class("py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(shared.PageHeader("Products. Product Manager")).
+		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(urlsScript).
 		Child(hb.Raw(productsHTML)).
 		Child(hb.Script(productsJS))
