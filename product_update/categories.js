@@ -10,12 +10,11 @@ function initCategoriesApp() {
         data() {
             return {
                 loading: false,
+                collapsed: false,
                 categories: [],
                 selectedCategoryIDs: [],
                 originalCategoryIDs: [],
-                successMessage: '',
-                errorMessage: '',
-                productID: productId
+                productID: categoriesProductId
             };
         },
         computed: {
@@ -37,7 +36,7 @@ function initCategoriesApp() {
             async loadCategories() {
                 this.loading = true;
                 try {
-                    const response = await fetch(urlCategoriesLoad, {
+                    const response = await fetch(categoriesUrlLoad, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -58,7 +57,7 @@ function initCategoriesApp() {
                     }
                 } catch (error) {
                     console.error('Error loading categories:', error);
-                    this.errorMessage = 'Failed to load categories: ' + error.message;
+                    Notiflix.Notify.failure('Failed to load categories: ' + error.message);
                 } finally {
                     this.loading = false;
                 }
@@ -67,7 +66,7 @@ function initCategoriesApp() {
             async saveCategories() {
                 this.loading = true;
                 try {
-                    const response = await fetch(urlCategoriesSave, {
+                    const response = await fetch(categoriesUrlSave, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -80,21 +79,14 @@ function initCategoriesApp() {
 
                     const data = await response.json();
                     if (data.status === 'success') {
-                        this.successMessage = data.message || 'Categories saved successfully';
-                        this.errorMessage = '';
+                        Notiflix.Notify.success(data.message || 'Categories saved successfully');
                         this.originalCategoryIDs = [...this.selectedCategoryIDs];
-
-                        setTimeout(() => {
-                            this.successMessage = '';
-                        }, 3000);
                     } else {
-                        this.errorMessage = data.message || 'Failed to save categories';
-                        this.successMessage = '';
+                        Notiflix.Notify.failure(data.message || 'Failed to save categories');
                     }
                 } catch (error) {
                     console.error('Error saving categories:', error);
-                    this.errorMessage = 'Failed to save categories: ' + error.message;
-                    this.successMessage = '';
+                    Notiflix.Notify.failure('Failed to save categories: ' + error.message);
                 } finally {
                     this.loading = false;
                 }

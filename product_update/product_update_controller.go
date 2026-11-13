@@ -267,20 +267,7 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 	if view == "details" {
 		categoriesComponent := NewProductCategoriesComponent(u)
 		categoriesComponent.Mount(r, product, productID)
-		categoriesCard = hb.Div().
-			Class("card mt-3").
-			Child(
-				hb.Div().
-					Class("card-header").
-					Child(hb.Heading4().
-						HTML("Categories").
-						Style("margin-bottom:0;display:inline-block;")),
-			).
-			Child(
-				hb.Div().
-					Class("card-body").
-					Child(categoriesComponent.Render()),
-			)
+		categoriesCard = categoriesComponent.Render()
 	}
 
 	mainCardGroup := hb.Div().

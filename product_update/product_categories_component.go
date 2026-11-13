@@ -58,13 +58,18 @@ func (c *productCategoriesComponent) Render() hb.TagInterface {
 		"product_id": c.productID,
 	})
 
+	// Globals are prefixed with "categories" because sibling cards
+	// (details, tags, media) also declare "const productId" and a
+	// duplicate top-level const would fail the entire script block.
 	initScript := `
-		const productId = "` + c.productID + `";
-		const urlCategoriesLoad = "` + urlCategoriesLoad + `";
-		const urlCategoriesSave = "` + urlCategoriesSave + `";
+		const categoriesProductId = "` + c.productID + `";
+		const categoriesUrlLoad = "` + urlCategoriesLoad + `";
+		const categoriesUrlSave = "` + urlCategoriesSave + `";
 	`
 
 	return hb.Div().
+		ID("categories-app").
+		Class("card mt-3").
 		Child(hb.Script(initScript)).
 		Child(hb.Raw(htmlContent)).
 		Child(hb.Script(jsContent))
