@@ -22,10 +22,11 @@ import (
 )
 
 var (
-	baseURL       string
-	allocCtx      context.Context
-	testStore     shopstore.StoreInterface
-	seedProductID string
+	baseURL          string
+	allocCtx         context.Context
+	testStore        shopstore.StoreInterface
+	seedProductID    string
+	seedProductTitle string
 )
 
 const adminPath = "/admin/shop"
@@ -45,6 +46,7 @@ func TestMain(m *testing.M) {
 		panic("e2e: no seeded products: " + fmt.Sprint(err))
 	}
 	seedProductID = products[0].GetID()
+	seedProductTitle = products[0].GetTitle()
 
 	admin, err := shopadmin.New(shopadmin.AdminOptions{
 		Store:        store,
