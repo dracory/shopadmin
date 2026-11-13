@@ -38,15 +38,12 @@ func (u *ui) renderPage(r *http.Request) string {
 	js := strings.ReplaceAll(ordersJS, "urlLoadOrders", "'"+urlLoadOrders+"'")
 	js = strings.ReplaceAll(js, "urlOrderDetails", "'"+urlOrderDetails+"'")
 
-	vueCDN := hb.Script("").Src(cdn.VueJs_3())
-
 	content := hb.Div().
 		Class("container").
 		Class("py-4").
 		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Orders. Order Manager")).
-		Child(vueCDN).
 		Child(hb.Raw(html)).
 		Child(hb.Script(js))
 
@@ -57,6 +54,7 @@ func (u *ui) renderPage(r *http.Request) string {
 		ScriptURLs []string
 	}{
 		ScriptURLs: []string{
+			cdn.VueJs_3(),
 			cdn.Htmx_1_9_4(),
 			cdn.Sweetalert2_10(),
 		},

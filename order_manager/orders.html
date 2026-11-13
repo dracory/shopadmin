@@ -137,8 +137,9 @@
     </div>
 
     <!-- Filter Modal -->
-    <div v-if="showFilterModal" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="showFilterModal" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="showFilterModal">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -192,5 +193,6 @@
         </div>
       </div>
     </div>
+    </template>
   </template>
 </div>

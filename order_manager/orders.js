@@ -1,4 +1,4 @@
-const { createApp } = Vue;
+// Vue is loaded by the page layout; it may load after this script.
 
 const OrdersApp = {
     data() {
@@ -312,10 +312,20 @@ const OrdersApp = {
     }
 };
 
-// Mount the app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+function initOrderManager() {
     const el = document.getElementById('app');
-    if (el) {
-        createApp(OrdersApp).mount('#app');
+    if (el && typeof Vue !== 'undefined') {
+        Vue.createApp(OrdersApp).mount('#app');
+    }
+}
+
+// Mount the app when DOM is ready and Vue is available
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Vue !== 'undefined') {
+        initOrderManager();
+    } else {
+        window.addEventListener('load', function () {
+            initOrderManager();
+        });
     }
 });

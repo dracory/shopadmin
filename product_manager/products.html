@@ -92,7 +92,7 @@
               <input type="checkbox" v-model="selectedProducts" :value="product.id">
             </td>
             <td>
-              {{ product.title }}
+              <a :href="urls.viewProduct + '&product_id=' + product.id">{{ product.title }}</a>
               <div class="text-muted" style="font-size: 0.7rem;">ref. {{ product.id }}</div>
             </td>
             <td>
