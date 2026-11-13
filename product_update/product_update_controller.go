@@ -245,10 +245,11 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 		body = component.Render()
 	}
 
-	// The details view renders its own self-contained card (title +
-	// Save in the header). The other views keep the shared card shell.
+	// The details and media views render their own self-contained
+	// cards (title + buttons in the header). The other views keep the
+	// shared card shell.
 	var card hb.TagInterface
-	if view == "details" || view == "" {
+	if view == "details" || view == "" || view == "media" {
 		card = body
 	} else {
 		card = hb.Div().
@@ -257,7 +258,6 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 				hb.Div().
 					Class("card-header").
 					Child(hb.Heading4().
-						HTMLIf(view == "media", "Product Media").
 						HTMLIf(view == "tags", "Product Tags").
 						HTMLIf(view == "metadata", "Product Metadata").
 						Style("margin-bottom:0;display:inline-block;")),
