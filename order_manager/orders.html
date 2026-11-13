@@ -58,7 +58,7 @@
                 </span>
               </div>
             </th>
-            <th @click="sortBy('status')" style="cursor: pointer; width: 120px;">
+            <th @click="sortBy('status')" style="cursor: pointer; width: 1px; white-space: nowrap;">
               Status
               <span v-if="sortByColumn === 'status'">
                 {{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}
@@ -70,7 +70,7 @@
                 {{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}
               </span>
             </th>
-            <th>Actions</th>
+            <th style="width: 100px;">Actions</th>
           </tr>
         </thead>
         <tbody>
