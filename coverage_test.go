@@ -115,6 +115,12 @@ type covResp struct {
 // covPost issues a JSON POST through the full dispatch.
 func covPost(t *testing.T, env *covEnv, controller string, action string, extra url.Values, payload any) covResp {
 	t.Helper()
+	return covPostResp[covResp](t, env, controller, action, extra, payload)
+}
+
+// covPostResp issues a JSON POST and unmarshals the response into R.
+func covPostResp[R any](t *testing.T, env *covEnv, controller string, action string, extra url.Values, payload any) R {
+	t.Helper()
 
 	q := url.Values{"controller": {controller}, "action": {action}}
 	for k, vs := range extra {
@@ -132,7 +138,7 @@ func covPost(t *testing.T, env *covEnv, controller string, action string, extra 
 	rr := httptest.NewRecorder()
 	env.admin.Handle(rr, req)
 
-	var resp covResp
+	var resp R
 	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("POST %s: unmarshal: %v (body=%q)", target, err, rr.Body.String())
 	}
@@ -295,6 +301,37 @@ func TestCoverageProductUpdateAjax(t *testing.T) {
 		"metadata": []map[string]any{{"key": "k1", "value": "v1"}},
 	})
 	covPostOK(t, env, "product_update", "save-media", extra, map[string]any{"media": []map[string]any{}})
+}
+
+func TestCoverageProductUpdateCategoriesAjax(t *testing.T) {
+	env := newCovEnv(t)
+	p := covSeedProduct(t, env)
+	c1 := covSeedCategory(t, env)
+	c2 := covSeedCategory(t, env)
+	extra := url.Values{"product_id": {p.GetID()}}
+
+	covPostOK(t, env, "product_update", "save-categories", extra, map[string]any{
+		"category_ids": []string{c1.GetID(), c2.GetID()},
+	})
+
+	resp := covPostResp[map[string]any](t, env, "product_update", "load-categories", extra, map[string]any{})
+	if resp["status"] != "success" {
+		t.Fatalf("load-categories: %v", resp)
+	}
+	selected, ok := resp["selected"].([]any)
+	if !ok || len(selected) != 2 {
+		t.Fatalf("expected 2 selected categories, got %v", resp["selected"])
+	}
+
+	covPostOK(t, env, "product_update", "save-categories", extra, map[string]any{
+		"category_ids": []string{},
+	})
+
+	resp = covPostResp[map[string]any](t, env, "product_update", "load-categories", extra, map[string]any{})
+	selected, ok = resp["selected"].([]any)
+	if !ok || len(selected) != 0 {
+		t.Fatalf("expected 0 selected categories after clear, got %v", resp["selected"])
+	}
 }
 
 func TestCoverageSettingsAjaxViaDispatch(t *testing.T) {

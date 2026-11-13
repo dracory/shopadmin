@@ -67,6 +67,10 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 			return u.handleLoadTags(w, r, productID)
 		case "save-tags":
 			return u.handleSaveTags(w, r, productID)
+		case "load-categories":
+			return u.handleLoadCategories(w, r, productID)
+		case "save-categories":
+			return u.handleSaveCategories(w, r, productID)
 		case "load-details":
 			return u.handleLoadDetails(w, r, productID)
 		case "save-details":
@@ -257,9 +261,32 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 	sidebarSection := sections.RenderPosition(shared.PositionSidebar)
 	bottomSection := sections.RenderPosition(shared.PositionBottom)
 
+	// The Categories card lives below the product details card and is
+	// managed independently through its own load/save handlers.
+	var categoriesCard hb.TagInterface
+	if view == "details" {
+		categoriesComponent := NewProductCategoriesComponent(u)
+		categoriesComponent.Mount(r, product, productID)
+		categoriesCard = hb.Div().
+			Class("card mt-3").
+			Child(
+				hb.Div().
+					Class("card-header").
+					Child(hb.Heading4().
+						HTML("Categories").
+						Style("margin-bottom:0;display:inline-block;")),
+			).
+			Child(
+				hb.Div().
+					Class("card-body").
+					Child(categoriesComponent.Render()),
+			)
+	}
+
 	mainCardGroup := hb.Div().
 		ChildIf(beforeFormSection != nil, beforeFormSection).
 		Child(card).
+		ChildIf(categoriesCard != nil, categoriesCard).
 		ChildIf(afterFormSection != nil, afterFormSection)
 
 	var middleLayout hb.TagInterface
@@ -679,6 +706,99 @@ func (u *ui) handleSaveTags(w http.ResponseWriter, r *http.Request, productID st
 	}
 
 	writeJSON(w, "success", "Tags saved successfully", nil)
+	return ""
+}
+
+func (u *ui) handleLoadCategories(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	categoryQuery := shopstore.NewCategoryQuery()
+	categoryQuery.SetStatus(shopstore.CATEGORY_STATUS_ACTIVE)
+	categories, err := shopStore.CategoryList(ctx, categoryQuery)
+	if err != nil {
+		u.Logger().Error("Failed to load categories", "error", err)
+		writeJSONError(w, "Failed to load categories")
+		return ""
+	}
+
+	categoryItems := []map[string]any{}
+	for _, category := range categories {
+		categoryItems = append(categoryItems, map[string]any{
+			"id":    category.GetID(),
+			"title": category.GetTitle(),
+		})
+	}
+
+	selected, err := shopStore.ProductCategoryIDs(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product categories", "error", err)
+		writeJSONError(w, "Failed to load product categories")
+		return ""
+	}
+
+	writeJSON(w, "success", "Categories loaded successfully", map[string]any{
+		"categories": categoryItems,
+		"selected":   selected,
+	})
+	return ""
+}
+
+func (u *ui) handleSaveCategories(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	var reqBody struct {
+		CategoryIDs []string `json:"category_ids"`
+	}
+	bodyBytes, _ := io.ReadAll(r.Body)
+	if err := json.Unmarshal(bodyBytes, &reqBody); err != nil {
+		writeJSONError(w, "Invalid request body")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	err = shopStore.ProductCategorySet(ctx, productID, reqBody.CategoryIDs)
+	if err != nil {
+		u.Logger().Error("Failed to save product categories", "error", err)
+		writeJSONError(w, "Failed to save product categories")
+		return ""
+	}
+
+	writeJSON(w, "success", "Categories saved successfully", nil)
 	return ""
 }
 
