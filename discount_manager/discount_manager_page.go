@@ -44,7 +44,7 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		Class("py-4").
 		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
-		Child(shared.PageHeader("Discounts. Discount Manager")).
+		Child(shared.PageHeader("Shop. Discounts")).
 		Child(urlsScript).
 		Child(hb.Raw(discountsHTML)).
 		Child(hb.Script(discountsJS))

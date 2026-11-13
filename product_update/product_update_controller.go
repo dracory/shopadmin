@@ -307,7 +307,7 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 		Class("py-4").
 		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
-		Child(shared.PageHeader("Products. Edit Product", buttonCancel)).
+		Child(shared.PageHeader("Shop. Edit Product", buttonCancel)).
 		ChildIf(topSection != nil, topSection).
 		Child(productTitle).
 		Child(tabs).

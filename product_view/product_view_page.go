@@ -108,7 +108,7 @@ func (u *ui) renderPage(r *http.Request) string {
 		Class("py-4").
 		Child(shared.SectionNav(r, u.Store(), u.Logger())).
 		Child(breadcrumbs).
-		Child(shared.PageHeader("Products. View Product")).
+		Child(shared.PageHeader("Shop. View Product")).
 		ChildIf(topSection != nil, topSection).
 		ChildIf(beforeFormSection != nil, beforeFormSection).
 		Child(body).
