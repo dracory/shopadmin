@@ -104,7 +104,7 @@
                 {{ product.status }}
               </span>
             </td>
-            <td>${{ product.price }}</td>
+            <td>{{ product.price_formatted || product.price }}</td>
             <td class="small" style="white-space: nowrap;">{{ formatDate(product.created_at) }}</td>
             <td class="small" style="white-space: nowrap;">{{ formatDate(product.updated_at) }}</td>
             <td>

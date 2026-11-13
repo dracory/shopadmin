@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/dracory/api"
+	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
 )
 
@@ -64,6 +65,8 @@ func (u *ui) handleOrderDetailsLoadAjax(w http.ResponseWriter, r *http.Request) 
 		u.Logger().Error("Failed to load order line items", "error", err)
 	}
 
+	currency := shared.ShopCurrency(ctx, shopStore)
+
 	items := []map[string]any{}
 	for _, item := range lineItems {
 		productName := item.GetProductID()
@@ -77,11 +80,13 @@ func (u *ui) handleOrderDetailsLoadAjax(w http.ResponseWriter, r *http.Request) 
 		lineTotal := item.GetPriceFloat() * float64(item.GetQuantityInt())
 
 		items = append(items, map[string]any{
-			"id":       item.GetID(),
-			"name":     productName,
-			"quantity": item.GetQuantity(),
-			"price":    item.GetPrice(),
-			"total":    lineTotal,
+			"id":              item.GetID(),
+			"name":            productName,
+			"quantity":        item.GetQuantity(),
+			"price":           item.GetPrice(),
+			"price_formatted": shared.FormatPrice(item.GetPrice(), currency),
+			"total":           lineTotal,
+			"total_formatted": shared.FormatPrice(lineTotal, currency),
 		})
 	}
 

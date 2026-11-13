@@ -35,6 +35,7 @@ func InitStore(filepath string) (shopstore.StoreInterface, error) {
 		OrderTableName:         "shop_order",
 		OrderLineItemTableName: "shop_order_line_item",
 		ProductTableName:       "shop_product",
+		SettingTableName:       "shop_setting",
 		AutomigrateEnabled:     true,
 	})
 	if err != nil {

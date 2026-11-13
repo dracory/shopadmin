@@ -19,7 +19,7 @@
             <p><strong>Code:</strong> {{ discount.code || '-' }}</p>
             <p><strong>Title:</strong> {{ discount.title || '-' }}</p>
             <p><strong>Type:</strong> {{ discount.type || '-' }}</p>
-            <p><strong>Amount:</strong> {{ discount.amount !== null && discount.amount !== undefined ? discount.amount : '-' }}</p>
+            <p><strong>Amount:</strong> {{ discount.amount_formatted || (discount.amount !== null && discount.amount !== undefined ? discount.amount : '-') }}</p>
             <p><strong>Status:</strong>
               <span class="badge" :class="getStatusBadgeClass(discount.status)">{{ discount.status }}</span>
             </p>

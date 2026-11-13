@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/dracory/api"
+	"github.com/dracory/shopadmin/shared"
+	"github.com/dracory/shopstore"
 	"github.com/spf13/cast"
 )
 
@@ -38,8 +40,14 @@ func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request) string {
 		return ""
 	}
 
+	amountFormatted := cast.ToString(discount.GetAmount()) + "%"
+	if discount.GetType() == shopstore.DISCOUNT_TYPE_AMOUNT {
+		amountFormatted = shared.FormatPrice(discount.GetAmount(), shared.ShopCurrency(ctx, shopStore))
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(api.SuccessWithData("Discount loaded successfully", map[string]any{
+		"amount_formatted":      amountFormatted,
 		"id":                    discount.GetID(),
 		"code":                  discount.GetCode(),
 		"title":                 discount.GetTitle(),

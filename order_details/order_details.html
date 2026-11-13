@@ -47,8 +47,8 @@
                   <br><small class="text-muted">Ref: {{ item.id || '-' }}</small>
                 </td>
                 <td>{{ item.quantity || 0 }}</td>
-                <td>{{ item.price || '-' }}</td>
-                <td>{{ item.total || '-' }}</td>
+                <td>{{ item.price_formatted || item.price || '-' }}</td>
+                <td>{{ item.total_formatted || item.total || '-' }}</td>
               </tr>
             </tbody>
           </table>

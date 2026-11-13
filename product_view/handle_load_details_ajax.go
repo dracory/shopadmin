@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dracory/api"
+	"github.com/dracory/shopadmin/shared"
 	"github.com/spf13/cast"
 )
 
@@ -52,6 +53,7 @@ func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request) string {
 		"created_at":        product.GetCreatedAt(),
 		"updated_at":        product.GetUpdatedAt(),
 		"price_float":       cast.ToFloat64(product.GetPrice()),
+		"price_formatted":   shared.FormatPrice(product.GetPrice(), shared.ShopCurrency(ctx, shopStore)),
 		"quantity_int":      product.GetQuantityInt(),
 	}).ToString()))
 	return ""

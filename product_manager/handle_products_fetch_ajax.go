@@ -6,6 +6,7 @@ import (
 
 	"github.com/dracory/api"
 	"github.com/dracory/neat"
+	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
 )
 
@@ -81,15 +82,18 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 		return ""
 	}
 
+	currency := shared.ShopCurrency(ctx, shopStore)
+
 	productList := []map[string]any{}
 	for _, product := range products {
 		productList = append(productList, map[string]any{
-			"id":         product.GetID(),
-			"title":      product.GetTitle(),
-			"status":     product.GetStatus(),
-			"price":      product.GetPrice(),
-			"created_at": product.GetCreatedAt(),
-			"updated_at": product.GetUpdatedAt(),
+			"id":              product.GetID(),
+			"title":           product.GetTitle(),
+			"status":          product.GetStatus(),
+			"price":           product.GetPrice(),
+			"price_formatted": shared.FormatPrice(product.GetPrice(), currency),
+			"created_at":      product.GetCreatedAt(),
+			"updated_at":      product.GetUpdatedAt(),
 		})
 	}
 

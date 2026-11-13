@@ -85,6 +85,11 @@ func (l *Links) OrderDetails(params map[string]string) string {
 	return l.url(CONTROLLER_ORDER_DETAILS, params)
 }
 
+// Settings builds the URL for the settings controller
+func (l *Links) Settings(params map[string]string) string {
+	return l.url(CONTROLLER_SETTINGS, params)
+}
+
 // url builds a URL for the given controller. The params map is copied
 // before mutation (fixes pre-existing bug #10 where the caller's map
 // was mutated).

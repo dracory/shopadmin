@@ -99,7 +99,7 @@
             </td>
             <td>{{ discount.id }}</td>
             <td>{{ discount.code }}</td>
-            <td>{{ discount.amount }}</td>
+            <td>{{ discount.amount_formatted || discount.amount }}</td>
             <td>
               <span class="badge" :class="getStatusBadgeClass(discount.status)">
                 {{ discount.status }}

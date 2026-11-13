@@ -8,6 +8,7 @@ import (
 	"github.com/dracory/neat"
 	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
+	"github.com/spf13/cast"
 )
 
 func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string {
@@ -82,15 +83,22 @@ func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string 
 		return ""
 	}
 
+	currency := shared.ShopCurrency(ctx, shopStore)
+
 	discountList := []map[string]any{}
 	for _, discount := range discounts {
+		amountFormatted := cast.ToString(discount.GetAmount()) + "%"
+		if discount.GetType() == shopstore.DISCOUNT_TYPE_AMOUNT {
+			amountFormatted = shared.FormatPrice(discount.GetAmount(), currency)
+		}
 		discountList = append(discountList, map[string]any{
-			"id":         discount.GetID(),
-			"code":       discount.GetCode(),
-			"amount":     discount.GetAmount(),
-			"status":     discount.GetStatus(),
-			"created_at": discount.GetCreatedAt(),
-			"updated_at": discount.GetUpdatedAt(),
+			"id":               discount.GetID(),
+			"code":             discount.GetCode(),
+			"amount":           discount.GetAmount(),
+			"amount_formatted": amountFormatted,
+			"status":           discount.GetStatus(),
+			"created_at":       discount.GetCreatedAt(),
+			"updated_at":       discount.GetUpdatedAt(),
 		})
 	}
 

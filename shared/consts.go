@@ -20,6 +20,7 @@ const (
 	CONTROLLER_DISCOUNT_UPDATE = "discount_update"
 	CONTROLLER_ORDERS          = "orders"
 	CONTROLLER_ORDER_DETAILS   = "order_details"
+	CONTROLLER_SETTINGS        = "settings"
 )
 
 // CatchAll is the catch-all route suffix

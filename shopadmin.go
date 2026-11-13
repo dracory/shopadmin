@@ -23,6 +23,7 @@ import (
 	"github.com/dracory/shopadmin/product_manager"
 	"github.com/dracory/shopadmin/product_update"
 	"github.com/dracory/shopadmin/product_view"
+	"github.com/dracory/shopadmin/setting_manager"
 	"github.com/dracory/shopadmin/shared"
 	"github.com/dracory/shopstore"
 )
@@ -203,6 +204,7 @@ func (a *admin) buildRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 		shared.CONTROLLER_DISCOUNT_UPDATE: func(w http.ResponseWriter, r *http.Request) { discount_update.UI(uiConfig).DiscountUpdate(w, r) },
 		shared.CONTROLLER_ORDERS:          func(w http.ResponseWriter, r *http.Request) { order_manager.UI(uiConfig).OrderManager(w, r) },
 		shared.CONTROLLER_ORDER_DETAILS:   func(w http.ResponseWriter, r *http.Request) { order_details.UI(uiConfig).OrderDetails(w, r) },
+		shared.CONTROLLER_SETTINGS:        func(w http.ResponseWriter, r *http.Request) { setting_manager.UI(uiConfig).SettingManager(w, r) },
 	}
 }
 

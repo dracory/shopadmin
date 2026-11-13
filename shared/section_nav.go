@@ -32,6 +32,8 @@ func SectionNav(r *http.Request, store shopstore.StoreInterface, logger *slog.Lo
 		active = "categories"
 	case CONTROLLER_DISCOUNTS, CONTROLLER_DISCOUNT_VIEW, CONTROLLER_DISCOUNT_UPDATE:
 		active = "discounts"
+	case CONTROLLER_SETTINGS:
+		active = "settings"
 	}
 
 	tab := func(label, key string, url string, count int) hb.TagInterface {
@@ -72,6 +74,7 @@ func SectionNav(r *http.Request, store shopstore.StoreInterface, logger *slog.Lo
 		tab("Categories", "categories", linksHelper.Categories(nil), -1),
 		tab("Discounts", "discounts", linksHelper.Discounts(nil),
 			count(func() (int64, error) { return store.DiscountCount(ctx, shopstore.NewDiscountQuery()) })),
+		tab("Settings", "settings", linksHelper.Settings(nil), -1),
 	}
 
 	if fileManagerURL := FileManagerURL(r); fileManagerURL != "" {
