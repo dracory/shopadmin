@@ -44,7 +44,7 @@ tasks:
     desc: Builds a coverage report
     cmds:
       - echo "Generating cover report..."
-      - go test ./... -coverprofile=coverage.out  -covermode=count
+      - go test ./... -coverpkg=./... -coverprofile=coverage.out  -covermode=count
       - go tool cover -html=coverage.out
       - echo "Done!"
     silent: true
