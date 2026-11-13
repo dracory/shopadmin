@@ -22,11 +22,15 @@ import (
 )
 
 var (
-	baseURL          string
-	allocCtx         context.Context
-	testStore        shopstore.StoreInterface
-	seedProductID    string
-	seedProductTitle string
+	baseURL           string
+	allocCtx          context.Context
+	testStore         shopstore.StoreInterface
+	seedProductID     string
+	seedProductTitle  string
+	seedCategoryID    string
+	seedDiscountID    string
+	seedDiscountTitle string
+	seedOrderID       string
 )
 
 const adminPath = "/admin/shop"
@@ -47,6 +51,25 @@ func TestMain(m *testing.M) {
 	}
 	seedProductID = products[0].GetID()
 	seedProductTitle = products[0].GetTitle()
+
+	categories, err := store.CategoryList(context.Background(), shopstore.NewCategoryQuery())
+	if err != nil || len(categories) == 0 {
+		panic("e2e: no seeded categories: " + fmt.Sprint(err))
+	}
+	seedCategoryID = categories[0].GetID()
+
+	discounts, err := store.DiscountList(context.Background(), shopstore.NewDiscountQuery())
+	if err != nil || len(discounts) == 0 {
+		panic("e2e: no seeded discounts: " + fmt.Sprint(err))
+	}
+	seedDiscountID = discounts[0].GetID()
+	seedDiscountTitle = discounts[0].GetTitle()
+
+	orders, err := store.OrderList(context.Background(), shopstore.NewOrderQuery())
+	if err != nil || len(orders) == 0 {
+		panic("e2e: no seeded orders: " + fmt.Sprint(err))
+	}
+	seedOrderID = orders[0].GetID()
 
 	admin, err := shopadmin.New(shopadmin.AdminOptions{
 		Store:        store,

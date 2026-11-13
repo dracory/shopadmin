@@ -3,6 +3,7 @@ package order_details
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/shopadmin/shared"
@@ -90,13 +91,12 @@ func (u *ui) handleOrderDetailsLoadAjax(w http.ResponseWriter, r *http.Request) 
 		})
 	}
 
-	// Parse shipping address from memo
+	// Parse shipping address from memo — only when it holds a JSON
+	// object; plain-text memos (the common case) skip parsing entirely.
 	var shippingAddress map[string]string
-	if order.GetMemo() != "" {
-		if err := json.Unmarshal([]byte(order.GetMemo()), &shippingAddress); err != nil {
-			// Log for debugging — shippingAddress will be nil, frontend
-			// will show empty address (fixes #22)
-			u.Logger().Error("Failed to parse shipping address from memo",
+	if memo := strings.TrimSpace(order.GetMemo()); strings.HasPrefix(memo, "{") {
+		if err := json.Unmarshal([]byte(memo), &shippingAddress); err != nil {
+			u.Logger().Debug("memo is not a valid shipping address JSON",
 				"error", err, "order_id", order.GetID())
 		}
 	}

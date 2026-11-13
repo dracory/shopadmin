@@ -31,8 +31,15 @@ WSL→Windows localhost forwarding).
   `WaitVisible` polls forever even though the DOM is fully loaded.
 - Routing is query-param based: `?controller=products|categories|...`
   (see `shared/consts.go`).
-- Manager tables render via Vue after an AJAX fetch — wait for `table`
-  before asserting on seeded content.
+- Manager tables render via Vue after an AJAX fetch — the raw `v-for`
+  template exists in the DOM before mount, so wait for
+  `table tbody tr:nth-of-type(2)` (a second row only exists post-render).
+- Vue strips directives like `v-model` and `:id` at mount — they can't
+  be used as selectors. Use `#app[data-v-app]`, `[id^="cat-"]`, or
+  `input[disabled]` as post-mount markers, and `chromedp.Poll` to wait
+  for prefilled values.
+- `chromedp.Poll` waits for a JS predicate — use it for "value loaded"
+  conditions where `WaitReady` only proves the element exists.
 - `customer_name` resolves via `CustomerResolver`, which is nil here —
   seeded orders show `-`; assert on status instead.
 - chromedp v0.23 rewrote the API (generic `Run[T]`); this suite pins the

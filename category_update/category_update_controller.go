@@ -79,6 +79,7 @@ func (u *ui) renderPage(r *http.Request) string {
 	initScript := hb.Script(`
 		const urlLoadCategory = '` + linksHelper.CategoryUpdate(map[string]string{"action": actionLoadCategory, "category_id": categoryID}) + `';
 		const urlUpdateCategory = '` + linksHelper.CategoryUpdate(map[string]string{"action": actionUpdateCategory, "category_id": categoryID}) + `';
+		const urlCategories = '` + linksHelper.Categories(map[string]string{}) + `';
 		const categoryID = '` + categoryID + `';
 	`)
 
@@ -89,7 +90,8 @@ func (u *ui) renderPage(r *http.Request) string {
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Categories. Update Category")).
 		Child(initScript).
-		Child(hb.Div().ID("app"))
+		Child(categoryUpdateForm()).
+		Child(hb.Script(categoryUpdateJS))
 
 	return u.Layout(nil, r, "Update Category | Shop", content.ToHTML(), struct {
 		Styles     []string
@@ -194,3 +196,118 @@ func (u *ui) handleUpdateCategory(w http.ResponseWriter, r *http.Request) string
 	_, _ = w.Write([]byte(api.Success("Category updated successfully").ToString()))
 	return ""
 }
+
+// categoryUpdateForm renders the update-category form. Values are
+// prefilled by categoryUpdateJS via the load-category action endpoint.
+func categoryUpdateForm() hb.TagInterface {
+	titleInput := hb.Input().
+		Type("text").
+		ID("category-title").
+		Class("form-control").
+		Attr("name", "title").
+		Attr("required", "required")
+
+	statusSelect := hb.Select().
+		ID("category-status").
+		Class("form-select").
+		Attr("name", "status").
+		Child(hb.Option().Value("active").Text("Active")).
+		Child(hb.Option().Value("inactive").Text("Inactive")).
+		Child(hb.Option().Value("draft").Text("Draft"))
+
+	descriptionInput := hb.Textarea().
+		ID("category-description").
+		Class("form-control").
+		Attr("name", "description").
+		Attr("rows", "4")
+
+	parentInput := hb.Input().
+		Type("text").
+		ID("category-parent-id").
+		Class("form-control").
+		Attr("name", "parent_id")
+
+	submitButton := hb.Button().
+		Type("button").
+		ID("btn-update-category").
+		Class("btn btn-primary").
+		Attr("onclick", "submitCategoryUpdate()").
+		HTML(`<i class="bi bi-check-lg me-1"></i> Save Category`)
+
+	return hb.Div().
+		Class("card bg-body-tertiary").
+		Style("max-width: 640px;").
+		Child(hb.Div().Class("card-body").
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-title").Text("Title")).
+				Child(titleInput)).
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-status").Text("Status")).
+				Child(statusSelect)).
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-description").Text("Description")).
+				Child(descriptionInput)).
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-parent-id").Text("Parent Category")).
+				Child(parentInput)).
+			Child(submitButton))
+}
+
+// categoryUpdateJS loads the category into the form on page load and
+// posts updates to the update-category endpoint, redirecting to the
+// category manager on success.
+const categoryUpdateJS = `
+async function loadCategoryForm() {
+	try {
+		const response = await fetch(urlLoadCategory, {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify({category_id: categoryID}),
+		});
+		const result = await response.json();
+		if (result.status !== 'success' || !result.data || !result.data.category) {
+			Swal.fire('Error', 'Failed to load category', 'error');
+			return;
+		}
+		const c = result.data.category;
+		document.getElementById('category-title').value = c.title || '';
+		document.getElementById('category-status').value = c.status || 'draft';
+		document.getElementById('category-description').value = c.description || '';
+		document.getElementById('category-parent-id').value = c.parent_id || '';
+	} catch (error) {
+		Swal.fire('Error', 'Failed to load category', 'error');
+	}
+}
+
+async function submitCategoryUpdate() {
+	const title = document.getElementById('category-title').value.trim();
+	if (!title) {
+		Swal.fire('Validation', 'Title is required', 'warning');
+		return;
+	}
+	const body = {
+		category_id: categoryID,
+		title: title,
+		status: document.getElementById('category-status').value,
+		description: document.getElementById('category-description').value,
+		parent_id: document.getElementById('category-parent-id').value.trim(),
+	};
+	try {
+		const response = await fetch(urlUpdateCategory, {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify(body),
+		});
+		const result = await response.json();
+		if (result.status === 'success') {
+			window.location.href = urlCategories;
+		} else {
+			Swal.fire('Error', result.message || 'Failed to update category', 'error');
+		}
+	} catch (error) {
+		Swal.fire('Error', 'Failed to update category', 'error');
+	}
+}
+
+document.addEventListener('DOMContentLoaded', loadCategoryForm);
+`
