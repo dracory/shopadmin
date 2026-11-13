@@ -89,7 +89,7 @@
               <input type="checkbox" v-model="selectedCategories" :value="category.id">
             </td>
             <td>
-              {{ category.title }}
+              <a :href="urls.categoryUpdate + '&category_id=' + category.id">{{ category.title }}</a>
               <div class="text-muted" style="font-size: 0.7rem;">ref. {{ category.id }}</div>
             </td>
             <td>
