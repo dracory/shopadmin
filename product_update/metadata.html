@@ -1,4 +1,34 @@
-<div id="metadata-app">
+<div id="metadata-app" class="card">
+    <!-- Card header: title left + action buttons right (not collapsible) -->
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 style="margin-bottom: 0;">
+            <i class="bi bi-list-ul me-2"></i>
+            <span>Product Metadata</span>
+        </h4>
+        <div class="d-flex gap-2">
+            <button
+                type="button"
+                class="btn btn-primary"
+                @click="showModal = true"
+                :disabled="loading"
+            >
+                <i class="bi bi-plus-circle me-2"></i> Add
+            </button>
+            <button
+                v-if="hasChanges"
+                type="button"
+                class="btn btn-success"
+                @click="saveMetadata"
+                :disabled="loading"
+            >
+                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i v-else class="bi bi-check-lg me-2"></i>
+                Save
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
     <template v-if="loading">
         <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
@@ -20,34 +50,6 @@
             <button type="button" class="btn-close" @click="errorMessage = ''"></button>
         </div>
 
-        <!-- Product Metadata Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">
-                <i class="bi bi-list-ul me-2"></i>
-                <span>Product Metadata</span>
-            </h5>
-            <div class="d-flex gap-2">
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    @click="showModal = true"
-                    :disabled="loading"
-                >
-                    <i class="bi bi-plus-circle me-2"></i> Add
-                </button>
-                <button
-                    v-if="hasChanges"
-                    type="button"
-                    class="btn btn-success"
-                    @click="saveMetadata"
-                    :disabled="loading"
-                >
-                    <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-                    <i v-else class="bi bi-save me-2"></i>
-                    Save Metadata
-                </button>
-            </div>
-        </div>
 
         <!-- Metadata List -->
         <div v-if="metadataItems.length > 0" class="mb-4">
@@ -166,4 +168,5 @@
             </div>
         </div>
     </template>
+    </div>
 </div>

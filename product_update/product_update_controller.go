@@ -245,29 +245,9 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 		body = component.Render()
 	}
 
-	// The details and media views render their own self-contained
-	// cards (title + buttons in the header). The other views keep the
-	// shared card shell.
-	var card hb.TagInterface
-	if view == "details" || view == "" || view == "media" {
-		card = body
-	} else {
-		card = hb.Div().
-			Class("card").
-			Child(
-				hb.Div().
-					Class("card-header").
-					Child(hb.Heading4().
-						HTMLIf(view == "tags", "Product Tags").
-						HTMLIf(view == "metadata", "Product Metadata").
-						Style("margin-bottom:0;display:inline-block;")),
-			).
-			Child(
-				hb.Div().
-					Class("card-body").
-					Child(body),
-			)
-	}
+	// All views render their own self-contained card (title + buttons
+	// in the header).
+	card := body
 
 	topSection := sections.RenderPosition(shared.PositionTop)
 	beforeFormSection := sections.RenderPosition(shared.PositionBeforeForm)
