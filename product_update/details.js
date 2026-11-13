@@ -17,6 +17,7 @@ function initDetailsApp() {
         data() {
             return {
                 loading: false,
+                collapsed: false,
                 productID: typeof productId !== 'undefined' ? productId : '',
                 title: '',
                 description: '',

@@ -58,6 +58,8 @@ func (c *productDetailsComponent) Render() hb.TagInterface {
 	`
 
 	return hb.Div().
+		ID("details-app").
+		Class("card").
 		Child(hb.Script(initScript)).
 		Child(hb.Raw(htmlContent)).
 		Child(hb.Script(jsContent))

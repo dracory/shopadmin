@@ -245,23 +245,29 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 		body = component.Render()
 	}
 
-	card := hb.Div().
-		Class("card").
-		Child(
-			hb.Div().
-				Class("card-header").
-				Child(hb.Heading4().
-					HTMLIf(view == "details", "Product Details").
-					HTMLIf(view == "media", "Product Media").
-					HTMLIf(view == "tags", "Product Tags").
-					HTMLIf(view == "metadata", "Product Metadata").
-					Style("margin-bottom:0;display:inline-block;")),
-		).
-		Child(
-			hb.Div().
-				Class("card-body").
-				Child(body),
-		)
+	// The details view renders its own self-contained card (title +
+	// Save in the header). The other views keep the shared card shell.
+	var card hb.TagInterface
+	if view == "details" || view == "" {
+		card = body
+	} else {
+		card = hb.Div().
+			Class("card").
+			Child(
+				hb.Div().
+					Class("card-header").
+					Child(hb.Heading4().
+						HTMLIf(view == "media", "Product Media").
+						HTMLIf(view == "tags", "Product Tags").
+						HTMLIf(view == "metadata", "Product Metadata").
+						Style("margin-bottom:0;display:inline-block;")),
+			).
+			Child(
+				hb.Div().
+					Class("card-body").
+					Child(body),
+			)
+	}
 
 	topSection := sections.RenderPosition(shared.PositionTop)
 	beforeFormSection := sections.RenderPosition(shared.PositionBeforeForm)
