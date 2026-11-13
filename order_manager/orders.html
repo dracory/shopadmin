@@ -185,9 +185,9 @@
             </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeFilterModal()">Cancel</button>
+            <button type="button" class="btn btn-secondary me-auto" @click="closeFilterModal()"><i class="bi bi-chevron-left me-2"></i>Cancel</button>
             <button type="button" class="btn btn-outline-danger" @click="clearModalConditions" v-if="modalConditions.length > 0">Clear All</button>
-            <button type="button" class="btn btn-primary" @click="applyConditions()">Apply Filters</button>
+            <button type="button" class="btn btn-primary" @click="applyConditions()"><i class="bi bi-check-lg me-2"></i>Apply Filters</button>
           </div>
         </div>
       </div>

@@ -65,7 +65,7 @@
                 {{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}
               </span>
             </th>
-            <th @click="sortBy('price')" style="cursor: pointer;">
+            <th @click="sortBy('price')" style="cursor: pointer; width: 1px; white-space: nowrap;">
               Price
               <span v-if="sortByColumn === 'price'">
                 {{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}
@@ -83,7 +83,7 @@
                 {{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}
               </span>
             </th>
-            <th style="width: 100px;">Actions</th>
+            <th style="width: 130px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -213,9 +213,9 @@
               </button>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" @click="closeFilterModal()">Cancel</button>
+              <button type="button" class="btn btn-secondary me-auto" @click="closeFilterModal()"><i class="bi bi-chevron-left me-2"></i>Cancel</button>
               <button type="button" class="btn btn-outline-danger" @click="clearModalConditions" v-if="modalConditions.length > 0">Clear All</button>
-              <button type="button" class="btn btn-primary" @click="applyConditions()">Apply Filters</button>
+              <button type="button" class="btn btn-primary" @click="applyConditions()"><i class="bi bi-check-lg me-2"></i>Apply Filters</button>
             </div>
           </div>
         </div>
