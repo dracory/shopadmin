@@ -6,9 +6,9 @@ require (
 	github.com/dracory/api v1.8.0
 	github.com/dracory/cdn v1.13.0
 	github.com/dracory/hb v1.88.0
-	github.com/dracory/neat v0.62.1
+	github.com/dracory/neat v0.62.2
 	github.com/dracory/req v0.1.0
-	github.com/dracory/shopstore v1.28.0
+	github.com/dracory/shopstore v1.29.0
 	github.com/dromara/carbon/v2 v2.7.1
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0
