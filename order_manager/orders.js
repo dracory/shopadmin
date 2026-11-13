@@ -16,19 +16,29 @@ const OrdersApp = {
             perPage: 10,
             jumpToPage: 1,
 
-            // Filters
-            filters: {
-                status: '',
-                customer_name: '',
-                customer_email: '',
-                order_id: '',
-                created_from: '',
-                created_to: ''
-            },
+            // Applied conditions (sent to the server)
+            conditions: [],
+            // Modal state — cloned from conditions when opening
+            modalConditions: [],
 
             // Sorting
             sortByColumn: 'created_at',
-            sortOrder: 'desc'
+            sortOrder: 'desc',
+
+            // Filter condition options — must match the Go handler fields.
+            conditionOptions: [
+                { value: 'order_id', label: 'Order ID', operators: ['contains'], inputType: 'text', placeholder: 'order id...' },
+                { value: 'customer_name', label: 'Customer Name', operators: ['contains'], inputType: 'text', placeholder: 'customer name...' },
+                { value: 'customer_email', label: 'Customer Email', operators: ['contains'], inputType: 'text', placeholder: 'customer email...' },
+                { value: 'status', label: 'Status', operators: ['equals'], inputType: 'select', placeholder: '', options: [
+                    { value: 'completed', label: 'Completed' },
+                    { value: 'pending', label: 'Pending' },
+                    { value: 'cancelled', label: 'Cancelled' },
+                ] },
+                { value: 'date_from', label: 'Created after', operators: ['equals'], inputType: 'date', placeholder: '' },
+                { value: 'date_to', label: 'Created before', operators: ['equals'], inputType: 'date', placeholder: '' },
+            ],
+            opLabels: { equals: '=', contains: 'contains' }
         };
     },
 
@@ -44,41 +54,41 @@ const OrdersApp = {
          * Returns a human-readable string describing the current filter state.
          */
         filterStatus() {
-            const parts = [];
-            if (this.filters.status) parts.push(`status: ${this.filters.status}`);
-            if (this.filters.customer_name) parts.push(`customer name: "${this.filters.customer_name}"`);
-            if (this.filters.customer_email) parts.push(`customer email: "${this.filters.customer_email}"`);
-            if (this.filters.order_id) parts.push(`order id: "${this.filters.order_id}"`);
-            if (this.filters.created_from) parts.push(`from: ${this.filters.created_from}`);
-            if (this.filters.created_to) parts.push(`to: ${this.filters.created_to}`);
-            
-            if (parts.length === 0) return 'Showing all orders';
-            return 'Showing orders with ' + parts.join(', ');
+            if (this.conditions.length === 0) return 'Showing all orders';
+            return this.conditions.length + ' filter(s) active';
         },
 
         /**
          * Returns true if any filters are active.
          */
         hasActiveFilters() {
-            return this.filters.status !== '' ||
-                   this.filters.customer_name !== '' ||
-                   this.filters.customer_email !== '' ||
-                   this.filters.order_id !== '' ||
-                   this.filters.created_from !== '' ||
-                   this.filters.created_to !== '';
+            return this.conditions.length > 0;
         }
     },
 
     mounted() {
         // Read filters from URL parameters for shareable URLs
         const urlParams = new URLSearchParams(window.location.search);
-        
-        this.filters.status = urlParams.get('status') || '';
-        this.filters.customer_name = urlParams.get('customer_name') || '';
-        this.filters.customer_email = urlParams.get('customer_email') || '';
-        this.filters.order_id = urlParams.get('order_id') || '';
-        this.filters.created_from = urlParams.get('created_from') || '';
-        this.filters.created_to = urlParams.get('created_to') || '';
+
+        // Try JSON filters first (new format)
+        const filtersRaw = urlParams.get('filters');
+        if (filtersRaw) {
+            try {
+                const parsed = JSON.parse(filtersRaw);
+                if (Array.isArray(parsed)) {
+                    this.conditions = parsed.filter(c => c && c.field && c.value);
+                }
+            } catch (e) { /* ignore malformed */ }
+        } else {
+            // Fallback: legacy individual params
+            if (urlParams.get('status')) this.conditions.push({ field: 'status', operator: 'equals', value: urlParams.get('status') });
+            if (urlParams.get('customer_name')) this.conditions.push({ field: 'customer_name', operator: 'contains', value: urlParams.get('customer_name') });
+            if (urlParams.get('customer_email')) this.conditions.push({ field: 'customer_email', operator: 'contains', value: urlParams.get('customer_email') });
+            if (urlParams.get('order_id')) this.conditions.push({ field: 'order_id', operator: 'contains', value: urlParams.get('order_id') });
+            if (urlParams.get('created_from')) this.conditions.push({ field: 'date_from', operator: 'equals', value: urlParams.get('created_from') });
+            if (urlParams.get('created_to')) this.conditions.push({ field: 'date_to', operator: 'equals', value: urlParams.get('created_to') });
+        }
+
         this.sortByColumn = urlParams.get('sort_by') || 'created_at';
         this.sortOrder = urlParams.get('sort_order') || 'desc';
         this.currentPage = parseInt(urlParams.get('page') || '0', 10);
@@ -101,12 +111,7 @@ const OrdersApp = {
                     body: JSON.stringify({
                         page: this.currentPage,
                         per_page: this.perPage,
-                        status: this.filters.status,
-                        customer_name: this.filters.customer_name,
-                        customer_email: this.filters.customer_email,
-                        order_id: this.filters.order_id,
-                        created_from: this.filters.created_from,
-                        created_to: this.filters.created_to,
+                        conditions: this.conditions,
                         sort_by: this.sortByColumn,
                         sort_order: this.sortOrder
                     })
@@ -199,6 +204,10 @@ const OrdersApp = {
          * Opens the filter modal.
          */
         openFilterModal() {
+            this.modalConditions = this.conditions.map(c => ({ ...c }));
+            if (this.modalConditions.length === 0) {
+                this.modalConditions.push({ field: '', operator: 'equals', value: '' });
+            }
             this.showFilterModal = true;
         },
 
@@ -209,17 +218,43 @@ const OrdersApp = {
             this.showFilterModal = false;
         },
 
+        addModalCondition() {
+            this.modalConditions.push({ field: '', operator: 'equals', value: '' });
+        },
+
+        removeModalCondition(i) {
+            this.modalConditions.splice(i, 1);
+        },
+
+        clearModalConditions() {
+            this.modalConditions = [];
+        },
+
+        onFieldChange(c) {
+            const opt = this.getFieldOpt(c.field);
+            if (opt) {
+                c.operator = opt.operators[0];
+            }
+            c.value = '';
+        },
+
+        applyConditions() {
+            this.conditions = this.modalConditions.filter(c => c.field && String(c.value).trim());
+            this.showFilterModal = false;
+            this.currentPage = 0;
+            this.applyFilters();
+        },
+
         /**
          * Applies the current filters and updates the URL.
          */
         applyFilters() {
             const params = new URLSearchParams();
-            if (this.filters.status) params.set('status', this.filters.status);
-            if (this.filters.customer_name) params.set('customer_name', this.filters.customer_name);
-            if (this.filters.customer_email) params.set('customer_email', this.filters.customer_email);
-            if (this.filters.order_id) params.set('order_id', this.filters.order_id);
-            if (this.filters.created_from) params.set('created_from', this.filters.created_from);
-            if (this.filters.created_to) params.set('created_to', this.filters.created_to);
+            const existing = new URLSearchParams(window.location.search);
+            const controller = existing.get('controller');
+            if (controller) params.set('controller', controller);
+
+            if (this.conditions.length > 0) params.set('filters', JSON.stringify(this.conditions));
             params.set('page', this.currentPage);
             params.set('per_page', this.perPage);
             params.set('sort_order', this.sortOrder);
@@ -228,7 +263,6 @@ const OrdersApp = {
             const newUrl = `${window.location.pathname}?${params.toString()}`;
             window.history.pushState({}, '', newUrl);
 
-            this.closeFilterModal();
             this.loadOrders();
         },
 
@@ -236,17 +270,18 @@ const OrdersApp = {
          * Clears all filters and resets to default state.
          */
         clearFilters() {
-            this.filters = {
-                status: '',
-                customer_name: '',
-                customer_email: '',
-                order_id: '',
-                created_from: '',
-                created_to: ''
-            };
+            this.conditions = [];
             this.currentPage = 0;
             this.applyFilters();
         },
+
+        // === Filter option helpers ===
+        getFieldOpt(v) { return this.conditionOptions.find(o => o.value === v); },
+        opLabel(op) { return this.opLabels[op] || op; },
+        getFieldOperators(v) { const o = this.getFieldOpt(v); return o ? o.operators : ['equals']; },
+        getFieldInputType(v) { const o = this.getFieldOpt(v); return o ? o.inputType : 'text'; },
+        getFieldPlaceholder(v) { const o = this.getFieldOpt(v); return o ? o.placeholder : ''; },
+        getFieldSelectOptions(v) { const o = this.getFieldOpt(v); return o && o.options ? o.options : []; },
 
         getStatusBadgeClass(status) {
             switch (status) {

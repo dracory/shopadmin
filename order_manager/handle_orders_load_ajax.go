@@ -25,16 +25,17 @@ func (u *ui) handleOrdersLoadAjax(w http.ResponseWriter, r *http.Request) string
 	}
 
 	var reqBody struct {
-		Page          int    `json:"page"`
-		PerPage       int    `json:"per_page"`
-		SortBy        string `json:"sort_by"`
-		Sort          string `json:"sort"`
-		Status        string `json:"status"`
-		CustomerName  string `json:"customer_name"`
-		CustomerEmail string `json:"customer_email"`
-		OrderID       string `json:"order_id"`
-		CreatedFrom   string `json:"created_from"`
-		CreatedTo     string `json:"created_to"`
+		Page          int         `json:"page"`
+		PerPage       int         `json:"per_page"`
+		SortBy        string      `json:"sort_by"`
+		Sort          string      `json:"sort"`
+		Status        string      `json:"status"`         // legacy single filter
+		CustomerName  string      `json:"customer_name"`  // legacy single filter
+		CustomerEmail string      `json:"customer_email"` // legacy single filter
+		OrderID       string      `json:"order_id"`       // legacy single filter
+		CreatedFrom   string      `json:"created_from"`   // legacy single filter
+		CreatedTo     string      `json:"created_to"`     // legacy single filter
+		Conditions    []condition `json:"conditions"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		api.Respond(w, r, api.Error("Invalid request body"))
@@ -75,39 +76,74 @@ func (u *ui) handleOrdersLoadAjax(w http.ResponseWriter, r *http.Request) string
 		return ""
 	}
 
-	filteredOrders := orders
-
-	// Filter by status
+	// Merge legacy single filters into the conditions list so both the
+	// old flat params and the new multi-condition format are supported.
+	conditions := reqBody.Conditions
 	if reqBody.Status != "" {
-		filteredOrders = []shopstore.OrderInterface{}
-		for _, order := range orders {
-			if order.GetStatus() == reqBody.Status {
-				filteredOrders = append(filteredOrders, order)
-			}
-		}
+		conditions = append(conditions, condition{Field: CondFieldStatus, Operator: "equals", Value: reqBody.Status})
 	}
-
-	// Filter by order ID
 	if reqBody.OrderID != "" {
-		tempOrders := filteredOrders
-		filteredOrders = []shopstore.OrderInterface{}
-		for _, order := range tempOrders {
-			if strings.Contains(strings.ToLower(order.GetID()), strings.ToLower(reqBody.OrderID)) {
-				filteredOrders = append(filteredOrders, order)
-			}
-		}
+		conditions = append(conditions, condition{Field: CondFieldOrderID, Operator: "contains", Value: reqBody.OrderID})
+	}
+	if reqBody.CustomerName != "" {
+		conditions = append(conditions, condition{Field: CondFieldCustomerName, Operator: "contains", Value: reqBody.CustomerName})
+	}
+	if reqBody.CustomerEmail != "" {
+		conditions = append(conditions, condition{Field: CondFieldCustomerEmail, Operator: "contains", Value: reqBody.CustomerEmail})
+	}
+	if reqBody.CreatedFrom != "" {
+		conditions = append(conditions, condition{Field: CondFieldDateFrom, Operator: "equals", Value: reqBody.CreatedFrom})
+	}
+	if reqBody.CreatedTo != "" {
+		conditions = append(conditions, condition{Field: CondFieldDateTo, Operator: "equals", Value: reqBody.CreatedTo})
 	}
 
-	// Filter by customer name/email via CustomerResolver (replaces userstore dependency)
+	filteredOrders := orders
 	resolver := u.CustomerResolver()
-	if (reqBody.CustomerName != "" || reqBody.CustomerEmail != "") && resolver != nil {
-		matchingCustomerIDs, err := resolver.SearchIDs(ctx, reqBody.CustomerName, reqBody.CustomerEmail)
-		if err != nil {
-			u.Logger().Error("Failed to search customer IDs", "error", err)
-			matchingCustomerIDs = nil
+
+	for _, cond := range conditions {
+		val := strings.TrimSpace(cond.Value)
+		if val == "" {
+			continue
 		}
 
-		if len(matchingCustomerIDs) > 0 {
+		switch cond.Field {
+		case CondFieldStatus:
+			tempOrders := filteredOrders
+			filteredOrders = []shopstore.OrderInterface{}
+			for _, order := range tempOrders {
+				if order.GetStatus() == val {
+					filteredOrders = append(filteredOrders, order)
+				}
+			}
+
+		case CondFieldOrderID:
+			tempOrders := filteredOrders
+			filteredOrders = []shopstore.OrderInterface{}
+			for _, order := range tempOrders {
+				if strings.Contains(strings.ToLower(order.GetID()), strings.ToLower(val)) {
+					filteredOrders = append(filteredOrders, order)
+				}
+			}
+
+		case CondFieldCustomerName, CondFieldCustomerEmail:
+			// Filter by customer name/email via CustomerResolver
+			// (replaces userstore dependency)
+			if resolver == nil {
+				continue
+			}
+			name, email := "", ""
+			if cond.Field == CondFieldCustomerName {
+				name = val
+			} else {
+				email = val
+			}
+			matchingCustomerIDs, err := resolver.SearchIDs(ctx, name, email)
+			if err != nil {
+				u.Logger().Error("Failed to search customer IDs", "error", err)
+				matchingCustomerIDs = nil
+			}
+
 			tempOrders := filteredOrders
 			filteredOrders = []shopstore.OrderInterface{}
 			for _, order := range tempOrders {
@@ -118,31 +154,27 @@ func (u *ui) handleOrdersLoadAjax(w http.ResponseWriter, r *http.Request) string
 					}
 				}
 			}
-		} else {
+
+		case CondFieldDateFrom, CondFieldDateTo:
+			tempOrders := filteredOrders
 			filteredOrders = []shopstore.OrderInterface{}
-		}
-	}
+			for _, order := range tempOrders {
+				createdAt := order.GetCreatedAt()
+				if createdAt == "" {
+					continue
+				}
 
-	// Filter by date range
-	if reqBody.CreatedFrom != "" || reqBody.CreatedTo != "" {
-		tempOrders := filteredOrders
-		filteredOrders = []shopstore.OrderInterface{}
-		for _, order := range tempOrders {
-			createdAt := order.GetCreatedAt()
-			if createdAt == "" {
-				continue
-			}
+				match := true
+				if cond.Field == CondFieldDateFrom && createdAt < val {
+					match = false
+				}
+				if cond.Field == CondFieldDateTo && createdAt > val {
+					match = false
+				}
 
-			match := true
-			if reqBody.CreatedFrom != "" && createdAt < reqBody.CreatedFrom {
-				match = false
-			}
-			if reqBody.CreatedTo != "" && createdAt > reqBody.CreatedTo {
-				match = false
-			}
-
-			if match {
-				filteredOrders = append(filteredOrders, order)
+				if match {
+					filteredOrders = append(filteredOrders, order)
+				}
 			}
 		}
 	}

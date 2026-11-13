@@ -21,11 +21,12 @@ func (u *ui) handleLoadSettings(w http.ResponseWriter, r *http.Request) string {
 	}
 
 	var reqBody struct {
-		Page    int    `json:"page"`
-		PerPage int    `json:"per_page"`
-		SortBy  string `json:"sort_by"`
-		Sort    string `json:"sort"`
-		Key     string `json:"key"`
+		Page       int         `json:"page"`
+		PerPage    int         `json:"per_page"`
+		SortBy     string      `json:"sort_by"`
+		Sort       string      `json:"sort"`
+		Key        string      `json:"key"` // legacy single filter
+		Conditions []condition `json:"conditions"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -55,6 +56,8 @@ func (u *ui) handleLoadSettings(w http.ResponseWriter, r *http.Request) string {
 	if reqBody.Key != "" {
 		query.SetKeyLike(reqBody.Key)
 	}
+
+	applyConditions(query, reqBody.Conditions)
 
 	settings, err := shopStore.SettingList(ctx, query)
 	if err != nil {

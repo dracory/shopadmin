@@ -23,21 +23,52 @@ function initSettingManager() {
         currentPage: 0,
         perPage: 10,
         totalSettings: 0,
-        filters: {
-          key: ''
-        },
+        showFilterModal: false,
+        // Applied conditions (sent to the server)
+        conditions: [],
+        // Modal state — cloned from conditions when opening
+        modalConditions: [],
         sortByColumn: 'setting_key',
-        sortOrder: 'asc'
+        sortOrder: 'asc',
+        // Filter condition options — must match the Go handler fields.
+        conditionOptions: [
+          { value: 'key', label: 'Key', operators: ['contains'], inputType: 'text', placeholder: 'setting key...' },
+          { value: 'id', label: 'ID', operators: ['equals'], inputType: 'text', placeholder: 'setting id' },
+          { value: 'date_from', label: 'Created after', operators: ['equals'], inputType: 'date', placeholder: '' },
+          { value: 'date_to', label: 'Created before', operators: ['equals'], inputType: 'date', placeholder: '' },
+        ],
+        opLabels: { equals: '=', contains: 'contains' }
       };
     },
     computed: {
       totalPages() {
         return Math.ceil(this.totalSettings / this.perPage);
+      },
+      filterStatus() {
+        if (this.conditions.length === 0) return 'Showing all settings';
+        return this.conditions.length + ' filter(s) active';
+      },
+      hasActiveFilters() {
+        return this.conditions.length > 0;
       }
     },
     mounted() {
       const urlParams = new URLSearchParams(window.location.search);
-      this.filters.key = urlParams.get('key') || '';
+
+      // Try JSON filters first (new format)
+      const filtersRaw = urlParams.get('filters');
+      if (filtersRaw) {
+        try {
+          const parsed = JSON.parse(filtersRaw);
+          if (Array.isArray(parsed)) {
+            this.conditions = parsed.filter(c => c && c.field && c.value);
+          }
+        } catch (e) { /* ignore malformed */ }
+      } else if (urlParams.get('key')) {
+        // Fallback: legacy key param
+        this.conditions.push({ field: 'key', operator: 'contains', value: urlParams.get('key') });
+      }
+
       this.sortByColumn = urlParams.get('sort_by') || 'setting_key';
       this.sortOrder = urlParams.get('sort_order') || 'asc';
       this.currentPage = parseInt(urlParams.get('page') || '0', 10);
@@ -57,7 +88,7 @@ function initSettingManager() {
             body: JSON.stringify({
               page: this.currentPage,
               per_page: this.perPage,
-              key: this.filters.key,
+              conditions: this.conditions,
               sort_by: this.sortByColumn,
               sort: this.sortOrder
             })
@@ -102,24 +133,64 @@ function initSettingManager() {
         this.currentPage = 0;
         this.applyFilters();
       },
+      openFilterModal() {
+        this.modalConditions = this.conditions.map(c => ({ ...c }));
+        if (this.modalConditions.length === 0) {
+          this.modalConditions.push({ field: '', operator: 'equals', value: '' });
+        }
+        this.showFilterModal = true;
+      },
+      closeFilterModal() {
+        this.showFilterModal = false;
+      },
+      addModalCondition() {
+        this.modalConditions.push({ field: '', operator: 'equals', value: '' });
+      },
+      removeModalCondition(i) {
+        this.modalConditions.splice(i, 1);
+      },
+      clearModalConditions() {
+        this.modalConditions = [];
+      },
+      onFieldChange(c) {
+        const opt = this.getFieldOpt(c.field);
+        if (opt) {
+          c.operator = opt.operators[0];
+        }
+        c.value = '';
+      },
+      applyConditions() {
+        this.conditions = this.modalConditions.filter(c => c.field && String(c.value).trim());
+        this.showFilterModal = false;
+        this.currentPage = 0;
+        this.applyFilters();
+      },
       applyFilters() {
         const params = new URLSearchParams();
-        if (this.filters.key) params.set('key', this.filters.key);
+        params.set('controller', 'settings');
+        if (this.conditions.length > 0) params.set('filters', JSON.stringify(this.conditions));
         params.set('page', this.currentPage);
         params.set('per_page', this.perPage);
         params.set('sort_order', this.sortOrder);
         params.set('sort_by', this.sortByColumn);
 
-        const newUrl = `${window.location.pathname}?controller=settings&${params.toString()}`;
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.pushState({}, '', newUrl);
 
         this.loadSettings();
       },
       clearFilters() {
-        this.filters.key = '';
+        this.conditions = [];
         this.currentPage = 0;
         this.applyFilters();
       },
+      // === Filter option helpers ===
+      getFieldOpt(v) { return this.conditionOptions.find(o => o.value === v); },
+      opLabel(op) { return this.opLabels[op] || op; },
+      getFieldOperators(v) { const o = this.getFieldOpt(v); return o ? o.operators : ['equals']; },
+      getFieldInputType(v) { const o = this.getFieldOpt(v); return o ? o.inputType : 'text'; },
+      getFieldPlaceholder(v) { const o = this.getFieldOpt(v); return o ? o.placeholder : ''; },
+      getFieldSelectOptions(v) { const o = this.getFieldOpt(v); return o && o.options ? o.options : []; },
       openCreateModal() {
         this.editingSetting = null;
         this.form = { key: '', value: '' };

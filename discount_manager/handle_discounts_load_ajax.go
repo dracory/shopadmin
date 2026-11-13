@@ -22,13 +22,14 @@ func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string 
 	}
 
 	var reqBody struct {
-		Page        int    `json:"page"`
-		PerPage     int    `json:"per_page"`
-		SortBy      string `json:"sort_by"`
-		Sort        string `json:"sort"`
-		Status      string `json:"status"`
-		CreatedFrom string `json:"created_from"`
-		CreatedTo   string `json:"created_to"`
+		Page        int         `json:"page"`
+		PerPage     int         `json:"per_page"`
+		SortBy      string      `json:"sort_by"`
+		Sort        string      `json:"sort"`
+		Status      string      `json:"status"`       // legacy single filter
+		CreatedFrom string      `json:"created_from"` // legacy single filter
+		CreatedTo   string      `json:"created_to"`   // legacy single filter
+		Conditions  []condition `json:"conditions"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -66,6 +67,8 @@ func (u *ui) handleLoadDiscounts(w http.ResponseWriter, r *http.Request) string 
 	if reqBody.CreatedTo != "" {
 		query.SetCreatedAtLte(reqBody.CreatedTo + " 23:59:59")
 	}
+
+	applyConditions(query, reqBody.Conditions)
 
 	discounts, err := shopStore.DiscountList(ctx, query)
 	if err != nil {

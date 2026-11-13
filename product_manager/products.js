@@ -19,13 +19,25 @@ function initProductManager() {
         currentPage: 0,
         perPage: 10,
         totalProducts: 0,
-        filters: {
-          status: '',
-          created_from: '',
-          created_to: ''
-        },
+        // Applied conditions (sent to the server)
+        conditions: [],
+        // Modal state — cloned from conditions when opening
+        modalConditions: [],
         sortByColumn: 'created_at',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
+        // Filter condition options — must match the Go handler fields.
+        conditionOptions: [
+          { value: 'search', label: 'Search', operators: ['contains'], inputType: 'text', placeholder: 'title...' },
+          { value: 'status', label: 'Status', operators: ['equals'], inputType: 'select', placeholder: '', options: [
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'draft', label: 'Draft' },
+          ] },
+          { value: 'id', label: 'ID', operators: ['equals'], inputType: 'text', placeholder: 'product id' },
+          { value: 'date_from', label: 'Created after', operators: ['equals'], inputType: 'date', placeholder: '' },
+          { value: 'date_to', label: 'Created before', operators: ['equals'], inputType: 'date', placeholder: '' },
+        ],
+        opLabels: { equals: '=', contains: 'contains' }
       };
     },
   computed: {
@@ -33,25 +45,32 @@ function initProductManager() {
       return Math.ceil(this.totalProducts / this.perPage);
     },
     filterStatus() {
-      const parts = [];
-      if (this.filters.status) parts.push(`status: ${this.filters.status}`);
-      if (this.filters.created_from) parts.push(`from: ${this.filters.created_from}`);
-      if (this.filters.created_to) parts.push(`to: ${this.filters.created_to}`);
-      
-      if (parts.length === 0) return 'Showing all products';
-      return 'Showing products with ' + parts.join(', ');
+      if (this.conditions.length === 0) return 'Showing all products';
+      return this.conditions.length + ' filter(s) active';
     },
     hasActiveFilters() {
-      return this.filters.status !== '' ||
-             this.filters.created_from !== '' ||
-             this.filters.created_to !== '';
+      return this.conditions.length > 0;
     }
   },
   mounted() {
     const urlParams = new URLSearchParams(window.location.search);
-    this.filters.status = urlParams.get('status') || '';
-    this.filters.created_from = urlParams.get('created_from') || '';
-    this.filters.created_to = urlParams.get('created_to') || '';
+
+    // Try JSON filters first (new format)
+    const filtersRaw = urlParams.get('filters');
+    if (filtersRaw) {
+      try {
+        const parsed = JSON.parse(filtersRaw);
+        if (Array.isArray(parsed)) {
+          this.conditions = parsed.filter(c => c && c.field && c.value);
+        }
+      } catch (e) { /* ignore malformed */ }
+    } else {
+      // Fallback: legacy individual params
+      if (urlParams.get('status')) this.conditions.push({ field: 'status', operator: 'equals', value: urlParams.get('status') });
+      if (urlParams.get('created_from')) this.conditions.push({ field: 'date_from', operator: 'equals', value: urlParams.get('created_from') });
+      if (urlParams.get('created_to')) this.conditions.push({ field: 'date_to', operator: 'equals', value: urlParams.get('created_to') });
+    }
+
     this.sortByColumn = urlParams.get('sort_by') || 'created_at';
     this.sortOrder = urlParams.get('sort_order') || 'desc';
     this.currentPage = parseInt(urlParams.get('page') || '0', 10);
@@ -71,9 +90,7 @@ function initProductManager() {
           body: JSON.stringify({
             page: this.currentPage,
             per_page: this.perPage,
-            status: this.filters.status,
-            created_from: this.filters.created_from,
-            created_to: this.filters.created_to,
+            conditions: this.conditions,
             sort_by: this.sortByColumn,
             sort: this.sortOrder
           })
@@ -116,16 +133,44 @@ function initProductManager() {
       this.applyFilters();
     },
     openFilterModal() {
+      this.modalConditions = this.conditions.map(c => ({ ...c }));
+      if (this.modalConditions.length === 0) {
+        this.modalConditions.push({ field: '', operator: 'equals', value: '' });
+      }
       this.showFilterModal = true;
     },
     closeFilterModal() {
       this.showFilterModal = false;
     },
+    addModalCondition() {
+      this.modalConditions.push({ field: '', operator: 'equals', value: '' });
+    },
+    removeModalCondition(i) {
+      this.modalConditions.splice(i, 1);
+    },
+    clearModalConditions() {
+      this.modalConditions = [];
+    },
+    onFieldChange(c) {
+      const opt = this.getFieldOpt(c.field);
+      if (opt) {
+        c.operator = opt.operators[0];
+      }
+      c.value = '';
+    },
+    applyConditions() {
+      this.conditions = this.modalConditions.filter(c => c.field && String(c.value).trim());
+      this.showFilterModal = false;
+      this.currentPage = 0;
+      this.applyFilters();
+    },
     applyFilters() {
       const params = new URLSearchParams();
-      if (this.filters.status) params.set('status', this.filters.status);
-      if (this.filters.created_from) params.set('created_from', this.filters.created_from);
-      if (this.filters.created_to) params.set('created_to', this.filters.created_to);
+      const existing = new URLSearchParams(window.location.search);
+      const controller = existing.get('controller');
+      if (controller) params.set('controller', controller);
+
+      if (this.conditions.length > 0) params.set('filters', JSON.stringify(this.conditions));
       params.set('page', this.currentPage);
       params.set('per_page', this.perPage);
       params.set('sort_order', this.sortOrder);
@@ -134,18 +179,20 @@ function initProductManager() {
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       window.history.pushState({}, '', newUrl);
 
-      this.closeFilterModal();
       this.loadProducts();
     },
     clearFilters() {
-      this.filters = {
-        status: '',
-        created_from: '',
-        created_to: ''
-      };
+      this.conditions = [];
       this.currentPage = 0;
       this.applyFilters();
     },
+    // === Filter option helpers ===
+    getFieldOpt(v) { return this.conditionOptions.find(o => o.value === v); },
+    opLabel(op) { return this.opLabels[op] || op; },
+    getFieldOperators(v) { const o = this.getFieldOpt(v); return o ? o.operators : ['equals']; },
+    getFieldInputType(v) { const o = this.getFieldOpt(v); return o ? o.inputType : 'text'; },
+    getFieldPlaceholder(v) { const o = this.getFieldOpt(v); return o ? o.placeholder : ''; },
+    getFieldSelectOptions(v) { const o = this.getFieldOpt(v); return o && o.options ? o.options : []; },
     sortIcon(column) {
       if (this.sortByColumn !== column) return 'bi bi-arrow-down-up text-muted';
       return this.sortOrder === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';

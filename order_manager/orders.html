@@ -139,87 +139,55 @@
     <!-- Filter Modal -->
     <div v-if="showFilterModal" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
     <div v-if="showFilterModal" class="modal fade show" style="display: block; z-index: 1050;">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Filter Orders</h5>
+            <h5 class="modal-title">Filter Conditions</h5>
             <button type="button" class="btn-close" @click="closeFilterModal()"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select v-model="filters.status" class="form-select">
-                <option value="">All Statuses</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Customer Name</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                v-model="filters.customer_name" 
-                placeholder="Search customer name"
-              />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Customer Email</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                v-model="filters.customer_email" 
-                placeholder="Search customer email"
-              />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Order ID</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                v-model="filters.order_id" 
-                placeholder="Search order ID"
-              />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Created Date Range</label>
-              <div class="input-group">
-                <input 
-                  type="date" 
-                  v-model="filters.created_from" 
-                  class="form-control" 
-                  placeholder="From"
-                />
-                <span class="input-group-text">to</span>
-                <input 
-                  type="date" 
-                  v-model="filters.created_to" 
-                  class="form-control" 
-                  placeholder="To"
-                />
+            <p class="text-muted small mb-3">
+              Add multiple conditions to filter orders. Conditions are combined with AND.
+            </p>
+
+            <div v-for="(c, i) in modalConditions" :key="i" class="row g-2 mb-2 align-items-end">
+              <div class="col-md-4">
+                <label class="form-label small">Field</label>
+                <select v-model="c.field" class="form-select form-select-sm" @change="onFieldChange(c)">
+                  <option value="">— Select field —</option>
+                  <option v-for="opt in conditionOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+              </div>
+              <div class="col-md-3" v-if="c.field">
+                <label class="form-label small">Match</label>
+                <select v-model="c.operator" class="form-select form-select-sm">
+                  <option v-for="op in getFieldOperators(c.field)" :key="op" :value="op">{{ opLabel(op) }}</option>
+                </select>
+              </div>
+              <div class="col-md-3" v-if="c.field">
+                <label class="form-label small">Value</label>
+                <input v-if="getFieldInputType(c.field) === 'text'" v-model="c.value" type="text" class="form-control form-control-sm" :placeholder="getFieldPlaceholder(c.field)">
+                <input v-else-if="getFieldInputType(c.field) === 'date'" v-model="c.value" type="date" class="form-control form-control-sm">
+                <select v-else-if="getFieldInputType(c.field) === 'select'" v-model="c.value" class="form-select form-select-sm">
+                  <option value="">— Select —</option>
+                  <option v-for="s in getFieldSelectOptions(c.field)" :key="s.value" :value="s.value">{{ s.label }}</option>
+                </select>
+              </div>
+              <div class="col-md-2" v-if="c.field">
+                <button class="btn btn-outline-danger btn-sm w-100" @click="removeModalCondition(i)">
+                  <i class="bi bi-trash"></i>
+                </button>
               </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Sort By</label>
-              <select v-model="sortByColumn" class="form-select">
-                <option value="created_at">Date</option>
-                <option value="status">Status</option>
-                <option value="customer_name">Customer Name</option>
-                <option value="customer_email">Customer Email</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Sort Order</label>
-              <select v-model="sortOrder" class="form-select">
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-            </div>
+
+            <button class="btn btn-outline-primary btn-sm mt-2" @click="addModalCondition">
+              <i class="bi bi-plus-circle"></i> Add Condition
+            </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" @click="clearFilters()">Clear Filters</button>
-            <button type="button" class="btn btn-primary" @click="applyFilters()">Apply Filters</button>
+            <button type="button" class="btn btn-secondary" @click="closeFilterModal()">Cancel</button>
+            <button type="button" class="btn btn-outline-danger" @click="clearModalConditions" v-if="modalConditions.length > 0">Clear All</button>
+            <button type="button" class="btn btn-primary" @click="applyConditions()">Apply Filters</button>
           </div>
         </div>
       </div>
