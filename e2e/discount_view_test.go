@@ -24,6 +24,9 @@ func TestDiscountViewShowsDiscount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("discount view page failed: %v", err)
 	}
+	if !strings.Contains(body, "Shop. View Discount") {
+		t.Fatal("expected 'Shop. View Discount' header on discount view page")
+	}
 	if !strings.Contains(body, seedDiscountTitle) {
 		t.Fatalf("expected seeded discount title %q in discount view", seedDiscountTitle)
 	}

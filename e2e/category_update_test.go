@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -16,14 +17,19 @@ func TestCategoryUpdateFlow(t *testing.T) {
 
 	// The form prefills via the load-category fetch — wait for a
 	// non-empty title input value, not just the element.
+	var body string
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		chromedp.WaitReady("#category-title", chromedp.ByID),
 		chromedp.Poll(`document.querySelector('#category-title').value !== ''`, nil,
 			chromedp.WithPollingInterval(200*time.Millisecond)),
+		chromedp.Text("body", &body),
 	)
 	if err != nil {
 		t.Fatalf("category update form did not prefill: %v", err)
+	}
+	if !strings.Contains(body, "Shop. Update Category") {
+		t.Fatal("expected 'Shop. Update Category' header on category update page")
 	}
 
 	// Change the title and save — the JS redirects back to the manager.

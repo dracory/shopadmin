@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -22,14 +23,19 @@ func TestProductUpdateAssignsCategory(t *testing.T) {
 
 	// Load the page, wait for the categories checklist (AJAX), tick the
 	// first category, and save.
+	var body string
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		chromedp.WaitReady(firstCheckbox, chromedp.ByQuery),
 		chromedp.Click(firstCheckbox, chromedp.ByQuery),
 		chromedp.Click(saveButton, chromedp.ByQuery),
+		chromedp.Text("body", &body),
 	)
 	if err != nil {
 		t.Fatalf("categories card interaction failed: %v", err)
+	}
+	if !strings.Contains(body, "Shop. Edit Product") {
+		t.Fatal("expected 'Shop. Edit Product' header on product update page")
 	}
 	// Give the save fetch a moment before reloading.
 	err = chromedp.Run(ctx, chromedp.Sleep(time.Second))

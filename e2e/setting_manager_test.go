@@ -30,7 +30,7 @@ func TestSettingManagerLoads(t *testing.T) {
 	if err != nil {
 		t.Fatalf("settings page failed: %v", err)
 	}
-	if !strings.Contains(body, "Shop Settings") {
-		t.Fatal("expected 'Shop Settings' editor on settings page")
+	if !strings.Contains(body, "Shop. Settings") {
+		t.Fatal("expected 'Shop. Settings' header on settings page")
 	}
 }

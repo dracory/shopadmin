@@ -24,4 +24,7 @@ func TestHomePageLoads(t *testing.T) {
 	if strings.TrimSpace(body) == "" {
 		t.Fatal("expected non-empty home page")
 	}
+	if !strings.Contains(body, "Shop. Dashboard") {
+		t.Fatal("expected 'Shop. Dashboard' header on home page")
+	}
 }

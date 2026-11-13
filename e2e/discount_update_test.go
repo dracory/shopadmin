@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ func TestDiscountUpdatePrefillsForm(t *testing.T) {
 	url := adminURL("discount_update") + "&discount_id=" + seedDiscountID
 
 	var title string
+	var body string
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 		// data-v-app is stamped by Vue on mount; the disabled ID input
@@ -25,9 +27,13 @@ func TestDiscountUpdatePrefillsForm(t *testing.T) {
 			`(document.querySelector('#details-app input[disabled]')||{}).value !== ''`,
 			nil, chromedp.WithPollingInterval(200*time.Millisecond)),
 		chromedp.Value(`#details-app input[placeholder="Enter discount title..."]`, &title, chromedp.ByQuery),
+		chromedp.Text("body", &body),
 	)
 	if err != nil {
 		t.Fatalf("discount update page failed: %v", err)
+	}
+	if !strings.Contains(body, "Shop. Edit Discount") {
+		t.Fatal("expected 'Shop. Edit Discount' header on discount update page")
 	}
 	if title != seedDiscountTitle {
 		t.Fatalf("expected prefilled title %q, got %q", seedDiscountTitle, title)

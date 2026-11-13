@@ -24,6 +24,9 @@ func TestProductViewShowsProduct(t *testing.T) {
 	if err != nil {
 		t.Fatalf("product view page failed: %v", err)
 	}
+	if !strings.Contains(body, "Shop. View Product") {
+		t.Fatal("expected 'Shop. View Product' header on product view page")
+	}
 	if !strings.Contains(body, seedProductTitle) {
 		t.Fatalf("expected seeded product title %q in product view", seedProductTitle)
 	}

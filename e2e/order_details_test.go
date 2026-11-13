@@ -24,6 +24,9 @@ func TestOrderDetailsShowsOrder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("order details page failed: %v", err)
 	}
+	if !strings.Contains(body, "Shop. Order Details") {
+		t.Fatal("expected 'Shop. Order Details' header on order details page")
+	}
 	if !strings.Contains(body, seedOrderID) {
 		t.Fatalf("expected order ID %q in order details", seedOrderID)
 	}

@@ -28,12 +28,17 @@ func TestCategoryCreateFlow(t *testing.T) {
 	}
 
 	// Click it → land on the create form.
+	var createBody string
 	err = chromedp.Run(ctx,
 		chromedp.Click("#btn-new-category", chromedp.ByID),
 		chromedp.WaitReady("#category-title", chromedp.ByID),
+		chromedp.Text("body", &createBody),
 	)
 	if err != nil {
 		t.Fatalf("create form did not load: %v", err)
+	}
+	if !strings.Contains(createBody, "Shop. Create Category") {
+		t.Fatal("expected 'Shop. Create Category' header on create category page")
 	}
 
 	// Fill and submit.
