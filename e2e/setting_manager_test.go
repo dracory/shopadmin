@@ -9,7 +9,7 @@ import (
 )
 
 // TestSettingManagerLoads verifies the settings page mounts its Vue app
-// and finishes loading (table or empty-state alert).
+// and finishes loading (settings editor or empty-state text).
 func TestSettingManagerLoads(t *testing.T) {
 	ctx := newTab(t)
 
@@ -20,17 +20,17 @@ func TestSettingManagerLoads(t *testing.T) {
 		// can match the uncompiled template.
 		chromedp.Poll(`!!document.querySelector('#app[data-v-app]')`, nil,
 			chromedp.WithPollingInterval(200*time.Millisecond)),
-		// Initial settings fetch finished when either the table or the
-		// "No settings found" empty state renders.
+		// Initial settings fetch finished when either the editor list or
+		// the "No settings" empty state renders.
 		chromedp.Poll(
-			`!!document.querySelector('#app table') || document.body.innerText.includes('No settings found')`,
+			`!!document.querySelector('#app .list-group') || document.body.innerText.includes('No settings to edit')`,
 			nil, chromedp.WithPollingInterval(200*time.Millisecond)),
 		chromedp.Text("body", &body),
 	)
 	if err != nil {
 		t.Fatalf("settings page failed: %v", err)
 	}
-	if !strings.Contains(body, "New Setting") {
-		t.Fatal("expected 'New Setting' button on settings page")
+	if !strings.Contains(body, "Shop Settings") {
+		t.Fatal("expected 'Shop Settings' editor on settings page")
 	}
 }

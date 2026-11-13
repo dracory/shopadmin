@@ -120,10 +120,4 @@ func TestOrderManagerFilterModal(t *testing.T) {
 	}
 }
 
-func TestSettingManagerFilterModal(t *testing.T) {
-	ctx := openFiltersModal(t, adminURL("settings"))
-	body := applyCondition(t, ctx, "key", "currency")
-	if !strings.Contains(body, "1 filter(s) active") {
-		t.Fatal("expected '1 filter(s) active' after applying key filter")
-	}
-}
+
