@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dracory/shopadmin"
 	"github.com/dracory/shopstore"
@@ -108,7 +109,15 @@ func run(logger *slog.Logger) int {
 	// Print full clickable URLs to stdout (slog escapes URLs, making them
 	// unclickable in most terminals).
 	fmt.Printf("\n  shopadmin example running:\n    Landing:  http://localhost%s/\n    Admin:    http://localhost%s\n\n", portFromAddr(addr), adminURL)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		logger.Error("server failed", "err", err)
 		return 1
 	}

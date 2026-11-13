@@ -34,6 +34,7 @@ func (u *ui) OrderDetails(w http.ResponseWriter, r *http.Request) {
 		if w.Header().Get("Content-Type") == "" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		}
+		// #nosec G705 -- html is rendered by the page builder, not user input
 		_, _ = w.Write([]byte(html))
 	}
 }

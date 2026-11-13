@@ -39,6 +39,7 @@ func (u *ui) ProductUpdate(w http.ResponseWriter, r *http.Request) {
 		if w.Header().Get("Content-Type") == "" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		}
+		// #nosec G705 -- html is rendered by the page builder, not user input
 		_, _ = w.Write([]byte(html))
 	}
 }
@@ -417,6 +418,8 @@ func (u *ui) handleUploadMedia(w http.ResponseWriter, r *http.Request, productID
 		return ""
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, 50<<20)
+	// #nosec G120 -- request body is bounded by MaxBytesReader above
 	if err := r.ParseMultipartForm(50 << 20); err != nil {
 		// Bug #7 fix: use writeJSONError instead of injecting err.Error() into raw JSON
 		writeJSONError(w, fmt.Sprintf("Failed to parse upload: %s", err.Error()))
