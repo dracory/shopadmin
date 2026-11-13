@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/dracory/shopadmin"
+	"github.com/dracory/shopadmin/testutils"
 	"github.com/dracory/shopstore"
 	_ "modernc.org/sqlite"
 )
@@ -68,7 +69,7 @@ func run(logger *slog.Logger) int {
 	// filtering, and sorting. Skip seeding if a file-based DB is used
 	// (persisted data should not be overwritten).
 	if dbFile == ":memory:" {
-		seedDB(store, logger)
+		testutils.SeedDB(store, logger)
 	}
 
 	admin, err := shopadmin.New(shopadmin.AdminOptions{

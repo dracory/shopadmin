@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product Update — Variants Card Prototype (dynamic dimensions)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  body { background: #1e1e2e; padding: 2rem 0; }
+  .container { max-width: 960px; }
+  .card { background: #26263b; border: 1px solid #3a3a55; }
+  .card-header { background: #2f2f4a; }
+  .dim-block { border: 1px solid #3a3a55; border-radius: .5rem; padding: .75rem 1rem; }
+  .opt-chip { cursor: pointer; user-select: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h2 class="mb-4 text-white-50">Product: Lemon Bow — Variants card (dynamic dimensions)</h2>
+
+  <!-- ========== Status card (existing, collapsed for context) ========== -->
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer;">
+      <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Status</h4>
+      <button class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i>Save</button>
+    </div>
+  </div>
+
+  <!-- ========== Product Details card (existing, collapsed) ========== -->
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer;">
+      <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Product Details</h4>
+      <button class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i>Save</button>
+    </div>
+  </div>
+
+  <!-- ========== NEW: Variants card ========== -->
+  <div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center"
+         style="cursor:pointer; user-select:none;" id="variantsHeader">
+      <h4 class="mb-0">
+        <i class="bi me-2" id="variantsIcon"></i>
+        <span>Variants</span>
+      </h4>
+      <div onclick="event.stopPropagation()">
+        <button class="btn btn-success" id="variantsSave">
+          <i class="bi bi-check-lg me-2"></i>Save
+        </button>
+      </div>
+    </div>
+
+    <div class="collapse show" id="variantsCollapse">
+      <div class="card-body">
+
+        <!-- Section 1: Dimension Matrix -->
+        <fieldset class="dim-block mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2"></i>Dimension Matrix</h6>
+            <button class="btn btn-sm btn-primary" id="addDimBtn">
+              <i class="bi bi-plus-circle me-1"></i> Add dimension
+            </button>
+          </div>
+          <small class="text-muted d-block mb-3">
+            Each dimension has a name and option values (e.g. size → S, M, L;
+            color → red, blue). Products without variants simply have no
+            dimensions.
+          </small>
+
+          <div id="dimensions"></div>
+        </fieldset>
+
+        <!-- Add-dimension inline form (hidden until Add clicked) -->
+        <div class="dim-block mb-3 d-none" id="addDimForm">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">Name</label>
+              <input class="form-control form-control-sm" id="newDimName" placeholder="e.g. size">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Options (comma-separated)</label>
+              <input class="form-control form-control-sm" id="newDimOptions" placeholder="e.g. S, M, L">
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-sm btn-success w-100" id="confirmDimBtn">
+                <i class="bi bi-check-lg me-1"></i> Add dimension
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Price Matrix — generated from the dimensions -->
+        <fieldset class="dim-block">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold mb-0"><i class="bi bi-grid-3x3-gap me-2"></i>Price Matrix</h6>
+            <span class="badge text-bg-secondary" id="variantCount">0 variants</span>
+          </div>
+          <small class="text-muted d-block mb-3">
+            One purchasable variant per dimension combination. Blank price
+            inherits the parent product price.
+          </small>
+
+          <table class="table table-dark table-striped align-middle mb-0" id="variantsTable">
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>SKU</th>
+              <th style="width:160px;">Price <small class="text-muted">(blank = inherit)</small></th>
+              <th style="width:130px;">Quantity</th>
+              <th style="width:60px;"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        </fieldset>
+      </div>
+    </div>
+  </div>
+  <!-- ========== /Variants card ========== -->
+
+  <!-- ========== Admin Notes card (existing, collapsed) ========== -->
+  <div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer;">
+      <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Admin Notes</h4>
+      <button class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i>Save</button>
+    </div>
+  </div>
+
+  <!-- Confirmation modal -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirm</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="confirmModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmModalYes">
+            <i class="bi bi-trash me-1"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add-option modal -->
+  <div class="modal fade" id="optionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Option</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Option value for <b id="optionModalDim"></b></label>
+          <input class="form-control" id="optionModalInput" placeholder="e.g. XL">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="optionModalAdd">
+            <i class="bi bi-plus-circle me-1"></i> Add
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// --- Collapse toggle ---
+const collapseEl = document.getElementById('variantsCollapse');
+const icon = document.getElementById('variantsIcon');
+let collapsed = false;
+function renderIcon() {
+  icon.className = 'bi me-2 ' + (collapsed ? 'bi-plus-circle' : 'bi-dash-circle');
+}
+document.getElementById('variantsHeader').addEventListener('click', () => {
+  collapsed = !collapsed;
+  collapseEl.classList.toggle('show', !collapsed);
+  renderIcon();
+});
+renderIcon();
+
+// --- State ---
+// dimensions: [{name, options:[]}]
+// variants: { "size:S|color:red": {sku, price, qty} }
+let dimensions = [{ name: 'size', options: ['S', 'M', 'L'] }];
+let variants = {
+  'size:S': { sku: 'LB-S', price: '', qty: 12 },
+  'size:M': { sku: 'LB-M', price: '', qty: 8 },
+  'size:L': { sku: 'LB-L', price: '24.99', qty: 3 },
+};
+
+const dimsEl = document.getElementById('dimensions');
+const tbody = document.querySelector('#variantsTable tbody');
+
+function comboKey(combo) {
+  // combo: {dimName: option}
+  return dimensions.filter(d => combo[d.name] !== undefined)
+    .map(d => d.name + ':' + combo[d.name]).join('|');
+}
+
+function comboLabel(combo) {
+  return dimensions.filter(d => combo[d.name] !== undefined)
+    .map(d => '<span class="text-muted">' + d.name + ':</span> <b>' + combo[d.name] + '</b>')
+    .join(' <span class="text-muted">/</span> ');
+}
+
+function cartesian(dims) {
+  if (dims.length === 0) return [];
+  let combos = dims[0].options.map(o => ({ [dims[0].name]: o }));
+  for (let i = 1; i < dims.length; i++) {
+    const next = [];
+    combos.forEach(c => dims[i].options.forEach(o =>
+      next.push({ ...c, [dims[i].name]: o })));
+    combos = next;
+  }
+  return combos;
+}
+
+function renderDimensions() {
+  dimsEl.innerHTML = '';
+  if (dimensions.length === 0) {
+    dimsEl.innerHTML = '<div class="alert alert-secondary py-2 mb-0">' +
+      '<i class="bi bi-info-circle me-2"></i>No variant dimensions — this product is sold as-is.</div>';
+    return;
+  }
+  dimensions.forEach((dim, di) => {
+    const block = document.createElement('div');
+    block.className = 'dim-block mb-2';
+    let html = '<div class="d-flex justify-content-between align-items-center mb-2">' +
+      '<span class="fw-bold"><i class="bi bi-diagram-3 me-2"></i>' + dim.name + '</span>' +
+      '<button class="btn btn-sm btn-outline-danger" title="Remove dimension">' +
+      '<i class="bi bi-trash"></i></button></div>' +
+      '<div class="d-flex flex-wrap gap-2 align-items-center">';
+    dim.options.forEach((opt, oi) => {
+      html += '<span class="opt-chip badge rounded-pill text-bg-secondary fs-6">' + opt +
+        ' <i class="bi bi-x-lg ms-1" data-dim="' + di + '" data-opt="' + oi + '"></i></span>';
+    });
+    html += '<button class="btn btn-sm btn-primary" data-dim-add="' + di + '">' +
+      '<i class="bi bi-plus-circle me-1"></i> Add</button></div>';
+    block.innerHTML = html;
+    block.querySelector('.btn-outline-danger').onclick = () => {
+      const n = combosUsingDim(dim.name);
+      askConfirm(
+        'Remove dimension <b>' + dim.name + '</b> and all its options?<br>' +
+        'This deletes <b>' + n + '</b> variant row(s) — their SKU, price ' +
+        'and stock values will be lost on save.',
+        () => { dimensions.splice(di, 1); pruneVariants(); renderAll(); }
+      );
+    };
+    block.querySelectorAll('.opt-chip .bi-x-lg').forEach(x => {
+      x.onclick = e => {
+        e.stopPropagation();
+        const d = dimensions[+x.dataset.dim];
+        const opt = d.options[+x.dataset.opt];
+        const n = combosUsing(d.name, opt);
+        askConfirm(
+          'Remove option <b>' + opt + '</b> from <b>' + d.name + '</b>?<br>' +
+          'This deletes <b>' + n + '</b> variant row(s) — their SKU, price ' +
+          'and stock values will be lost on save.',
+          () => {
+            d.options.splice(d.options.indexOf(opt), 1);
+            if (d.options.length === 0) dimensions.splice(dimensions.indexOf(d), 1);
+            pruneVariants(); renderAll();
+          }
+        );
+      };
+    });
+    block.querySelector('[data-dim-add]').onclick = () => openOptionModal(di);
+    dimsEl.appendChild(block);
+  });
+}
+
+function pruneVariants() {
+  const valid = new Set(cartesian(dimensions).map(comboKey));
+  Object.keys(variants).forEach(k => { if (!valid.has(k)) delete variants[k]; });
+}
+
+function renderRows() {
+  tbody.innerHTML = '';
+  const combos = cartesian(dimensions);
+  document.getElementById('variantCount').textContent = combos.length + ' variant' + (combos.length === 1 ? '' : 's');
+  if (combos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">' +
+      'No variants — add a dimension with options to generate the matrix.</td></tr>';
+    return;
+  }
+  combos.forEach(combo => {
+    const key = comboKey(combo);
+    if (!variants[key]) variants[key] = { sku: '', price: '', qty: 0 };
+    const v = variants[key];
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + comboLabel(combo) + '</td>' +
+      '<td><input class="form-control form-control-sm" value="' + v.sku + '" placeholder="SKU"></td>' +
+      '<td><input type="number" step="0.01" min="0" class="form-control form-control-sm" value="' +
+        v.price + '" placeholder="parent price"></td>' +
+      '<td><input type="number" min="0" class="form-control form-control-sm" value="' + v.qty + '"></td>' +
+      '<td><button class="btn btn-sm btn-outline-danger" title="Remove this combination">' +
+      '<i class="bi bi-trash"></i></button></td>';
+    const inputs = tr.querySelectorAll('input');
+    inputs[0].oninput = e => v.sku = e.target.value;
+    inputs[1].oninput = e => v.price = e.target.value;
+    inputs[2].oninput = e => v.qty = e.target.value;
+    tr.querySelector('button').onclick = () => {
+      // Removing a row means removing the option values that produced it —
+      // which also removes sibling rows sharing those options.
+      const parts = key.split('|').map(p => p.split(':'));
+      const removed = new Set();
+      parts.forEach(([dn, ov]) => {
+        cartesian(dimensions).forEach(c => { if (c[dn] === ov) removed.add(comboKey(c)); });
+      });
+      askConfirm(
+        'Remove this combination (<b>' + parts.map(p => p[1]).join(' / ') + '</b>)?<br>' +
+        'This deletes its option(s) from the matrix, removing <b>' + removed.size +
+        '</b> variant row(s) total — SKU, price and stock values will be lost on save.',
+        () => {
+          parts.forEach(([dn, ov]) => {
+            const d = dimensions.find(x => x.name === dn);
+            if (d) { d.options = d.options.filter(o => o !== ov); }
+          });
+          dimensions = dimensions.filter(d => d.options.length > 0);
+          pruneVariants(); renderAll();
+        }
+      );
+    };
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAll() { renderDimensions(); renderRows(); }
+
+// --- Confirmation modal ---
+const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+let confirmAction = null;
+
+function askConfirm(messageHtml, action) {
+  document.getElementById('confirmModalBody').innerHTML = messageHtml;
+  confirmAction = action;
+  confirmModal.show();
+}
+
+document.getElementById('confirmModalYes').onclick = () => {
+  confirmModal.hide();
+  if (confirmAction) { const fn = confirmAction; confirmAction = null; fn(); }
+};
+
+// count variant rows that use a given option value
+function combosUsing(dimName, optValue) {
+  return cartesian(dimensions).filter(c => c[dimName] === optValue).length;
+}
+function combosUsingDim(dimName) {
+  return cartesian(dimensions).filter(c => c[dimName] !== undefined).length;
+}
+
+// --- Add-option modal ---
+let optionModalDimIndex = -1;
+const optionModal = new bootstrap.Modal(document.getElementById('optionModal'));
+
+function openOptionModal(di) {
+  optionModalDimIndex = di;
+  document.getElementById('optionModalDim').textContent = dimensions[di].name;
+  const input = document.getElementById('optionModalInput');
+  input.value = '';
+  optionModal.show();
+  setTimeout(() => input.focus(), 200);
+}
+
+document.getElementById('optionModalAdd').onclick = () => {
+  const v = document.getElementById('optionModalInput').value.trim();
+  const dim = dimensions[optionModalDimIndex];
+  if (v && dim && !dim.options.includes(v)) {
+    dim.options.push(v);
+    renderAll();
+  }
+  optionModal.hide();
+};
+
+// --- Add dimension form ---
+document.getElementById('addDimBtn').onclick = () =>
+  document.getElementById('addDimForm').classList.toggle('d-none');
+document.getElementById('confirmDimBtn').onclick = () => {
+  const name = document.getElementById('newDimName').value.trim();
+  const opts = document.getElementById('newDimOptions').value
+    .split(',').map(s => s.trim()).filter(Boolean);
+  if (!name || opts.length === 0 || dimensions.some(d => d.name === name)) return;
+  dimensions.push({ name, options: opts });
+  document.getElementById('newDimName').value = '';
+  document.getElementById('newDimOptions').value = '';
+  document.getElementById('addDimForm').classList.add('d-none');
+  renderAll();
+};
+
+document.getElementById('variantsSave').onclick = () => {
+  console.log('schema:', dimensions);
+  console.log('save-variants payload:', JSON.parse(JSON.stringify(variants)));
+  alert('Save clicked — check console for schema + payload');
+};
+
+renderAll();
+</script>
+</body>
+</html>

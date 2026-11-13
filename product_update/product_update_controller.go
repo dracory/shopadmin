@@ -75,6 +75,10 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 			return u.handleLoadStatus(w, r, productID)
 		case "save-status":
 			return u.handleSaveStatus(w, r, productID)
+		case "load-variants":
+			return u.handleLoadVariants(w, r, productID)
+		case "save-variants":
+			return u.handleSaveVariants(w, r, productID)
 		case "load-notes":
 			return u.handleLoadNotes(w, r, productID)
 		case "save-notes":
@@ -260,6 +264,7 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 	// cards; Categories sits below the product details card.
 	var statusCard hb.TagInterface
 	var categoriesCard hb.TagInterface
+	var variantsCard hb.TagInterface
 	var adminNotesCard hb.TagInterface
 	if view == "details" {
 		statusComponent := NewProductStatusComponent(u)
@@ -269,6 +274,10 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 		categoriesComponent := NewProductCategoriesComponent(u)
 		categoriesComponent.Mount(r, product, productID)
 		categoriesCard = categoriesComponent.Render()
+
+		variantsComponent := NewProductVariantsComponent(u)
+		variantsComponent.Mount(r, product, productID)
+		variantsCard = variantsComponent.Render()
 
 		adminNotesComponent := NewProductAdminNotesComponent(u)
 		adminNotesComponent.Mount(r, product, productID)
@@ -280,6 +289,7 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 		ChildIf(statusCard != nil, statusCard).
 		Child(card).
 		ChildIf(categoriesCard != nil, categoriesCard).
+		ChildIf(variantsCard != nil, variantsCard).
 		ChildIf(adminNotesCard != nil, adminNotesCard).
 		ChildIf(afterFormSection != nil, afterFormSection)
 
@@ -872,6 +882,249 @@ func (u *ui) handleSaveStatus(w http.ResponseWriter, r *http.Request, productID 
 	}
 
 	writeJSON(w, "success", "Status saved successfully", nil)
+	return ""
+}
+
+// variantDimensionPayload is one dimension of the parent's variant
+// schema (e.g. size with options S/M/L).
+type variantDimensionPayload struct {
+	Name     string   `json:"name"`
+	Required bool     `json:"required"`
+	Options  []string `json:"options"`
+}
+
+// variantPayload is one generated variant row (a dimension combination
+// plus its purchasable attributes).
+type variantPayload struct {
+	Values   map[string]string `json:"values"`
+	SKU      string            `json:"sku"`
+	Price    string            `json:"price"`
+	Quantity string            `json:"quantity"`
+}
+
+// variantComboKey builds a deterministic key for a variant combination,
+// ordered by the dimension schema.
+func variantComboKey(dimensions []variantDimensionPayload, values map[string]string) string {
+	parts := make([]string, 0, len(dimensions))
+	for _, dim := range dimensions {
+		if v, ok := values[dim.Name]; ok {
+			parts = append(parts, dim.Name+":"+v)
+		}
+	}
+	return strings.Join(parts, "|")
+}
+
+// handleLoadVariants returns the parent's variant dimension schema and
+// the existing variant products.
+func (u *ui) handleLoadVariants(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	schemas, err := product.GetVariantMatrixSchemas()
+	if err != nil {
+		u.Logger().Error("Failed to parse variant schema", "error", err)
+		writeJSONError(w, "Failed to load variant schema")
+		return ""
+	}
+
+	dimensions := make([]variantDimensionPayload, 0, len(schemas))
+	for _, s := range schemas {
+		if s.Name == "" {
+			continue
+		}
+		dimensions = append(dimensions, variantDimensionPayload{
+			Name:     s.Name,
+			Required: s.Required,
+			Options:  s.Options,
+		})
+	}
+
+	existing, err := shopStore.ProductVariantList(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load variants", "error", err)
+		writeJSONError(w, "Failed to load variants")
+		return ""
+	}
+
+	variants := make([]variantPayload, 0, len(existing))
+	for _, v := range existing {
+		values, err := v.GetVariantMatrixValues()
+		if err != nil {
+			u.Logger().Error("Failed to parse variant values", "error", err, "variant_id", v.GetID())
+			continue
+		}
+		variants = append(variants, variantPayload{
+			Values:   values,
+			SKU:      v.GetMeta("sku"),
+			Price:    v.GetPrice(),
+			Quantity: v.GetQuantity(),
+		})
+	}
+
+	writeJSON(w, "success", "Variants loaded successfully", map[string]any{
+		"dimensions": dimensions,
+		"variants":   variants,
+	})
+	return ""
+}
+
+// handleSaveVariants replaces the parent's variant schema and diffs the
+// variant products: missing combinations are created, changed ones
+// updated, removed ones soft deleted.
+func (u *ui) handleSaveVariants(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	var reqBody struct {
+		Dimensions []variantDimensionPayload `json:"dimensions"`
+		Variants   []variantPayload          `json:"variants"`
+	}
+	bodyBytes, _ := io.ReadAll(r.Body)
+	if err := json.Unmarshal(bodyBytes, &reqBody); err != nil {
+		u.Logger().Error("handleSaveVariants: failed to decode request body", "error", err, "body", string(bodyBytes))
+		writeJSONError(w, "Invalid request body")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	// Update the parent's dimension schema. A nil slice marshals to
+	// "null", which clears the schema entirely.
+	var schemas []shopstore.VariantMatrixSchema
+	for _, d := range reqBody.Dimensions {
+		if d.Name == "" || len(d.Options) == 0 {
+			continue
+		}
+		schemas = append(schemas, shopstore.VariantMatrixSchema{
+			Name:     d.Name,
+			Required: d.Required,
+			Options:  d.Options,
+		})
+	}
+	if err := product.SetVariantMatrixSchemas(schemas); err != nil {
+		u.Logger().Error("Failed to set variant schema", "error", err)
+		writeJSONError(w, "Failed to save variant schema")
+		return ""
+	}
+	if err := shopStore.ProductUpdate(ctx, product); err != nil {
+		u.Logger().Error("Failed to save product schema", "error", err)
+		writeJSONError(w, "Failed to save product")
+		return ""
+	}
+
+	// Index existing variants by combination key
+	existing, err := shopStore.ProductVariantList(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load variants", "error", err)
+		writeJSONError(w, "Failed to load variants")
+		return ""
+	}
+	type keyedVariant struct {
+		key     string
+		variant shopstore.ProductInterface
+	}
+	existingByKey := map[string]shopstore.ProductInterface{}
+	existingKeyed := make([]keyedVariant, 0, len(existing))
+	for _, v := range existing {
+		values, err := v.GetVariantMatrixValues()
+		if err != nil {
+			continue
+		}
+		key := variantComboKey(reqBody.Dimensions, values)
+		if key != "" {
+			existingByKey[key] = v
+		}
+		existingKeyed = append(existingKeyed, keyedVariant{key: key, variant: v})
+	}
+
+	// Create or update every requested combination
+	seen := map[string]bool{}
+	for _, vp := range reqBody.Variants {
+		key := variantComboKey(reqBody.Dimensions, vp.Values)
+		if key == "" {
+			continue
+		}
+		seen[key] = true
+
+		price := vp.Price
+		if price == "" {
+			price = product.GetPrice() // inherit parent price
+		}
+
+		if v, ok := existingByKey[key]; ok {
+			v.SetTitle(product.GetTitle())
+			v.SetStatus(shopstore.PRODUCT_STATUS_ACTIVE)
+			v.SetPrice(price)
+			v.SetQuantity(vp.Quantity)
+			_ = v.SetVariantMatrixValues(vp.Values)
+			_ = v.SetMeta("sku", vp.SKU)
+			if err := shopStore.ProductUpdate(ctx, v); err != nil {
+				u.Logger().Error("Failed to update variant", "error", err, "variant_id", v.GetID())
+				writeJSONError(w, "Failed to save variant")
+				return ""
+			}
+			continue
+		}
+
+		variant := shopstore.NewProduct()
+		variant.SetParentID(productID)
+		variant.SetTitle(product.GetTitle())
+		variant.SetStatus(shopstore.PRODUCT_STATUS_ACTIVE)
+		variant.SetPrice(price)
+		variant.SetQuantity(vp.Quantity)
+		_ = variant.SetVariantMatrixValues(vp.Values)
+		_ = variant.SetMeta("sku", vp.SKU)
+		if err := shopStore.ProductCreate(ctx, variant); err != nil {
+			u.Logger().Error("Failed to create variant", "error", err)
+			writeJSONError(w, "Failed to save variant")
+			return ""
+		}
+	}
+
+	// Soft delete variants whose combination was removed. Variants that
+	// no longer match any dimension (empty key) are always removed.
+	for _, ev := range existingKeyed {
+		if seen[ev.key] && ev.key != "" {
+			continue
+		}
+		if err := shopStore.ProductSoftDeleteByID(ctx, ev.variant.GetID()); err != nil {
+			u.Logger().Error("Failed to delete variant", "error", err, "variant_id", ev.variant.GetID())
+		}
+	}
+
+	writeJSON(w, "success", "Variants saved successfully", nil)
 	return ""
 }
 

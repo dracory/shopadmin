@@ -1,0 +1,253 @@
+<!-- Card header: collapse toggle (title left) + Save button (right) -->
+<div
+    class="card-header d-flex justify-content-between align-items-center"
+    style="cursor: pointer; user-select: none;"
+    @click="collapsed = !collapsed"
+>
+    <h4 style="margin-bottom: 0;">
+        <i class="bi me-2" :class="collapsed ? 'bi-plus-circle' : 'bi-dash-circle'"></i>
+        <span>Variants</span>
+    </h4>
+    <!-- Wrapper stops propagation so a click on Save never toggles. -->
+    <div @click.stop>
+        <button
+            type="button"
+            class="btn btn-success"
+            @click="saveVariants"
+        >
+            <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <i v-else class="bi bi-check-lg me-2"></i>
+            Save
+        </button>
+    </div>
+</div>
+
+<!-- Collapsible card body -->
+<div id="productVariantsCollapse" class="collapse" :class="{ show: !collapsed }">
+    <div class="card-body">
+        <template v-if="loading">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading data...</span>
+                </div>
+            </div>
+        </template>
+
+        <template v-else>
+            <!-- Section 1: Dimension Matrix -->
+            <fieldset class="border rounded p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2"></i>Dimension Matrix</h6>
+                    <button type="button" class="btn btn-sm btn-primary" @click="showDimModal = true">
+                        <i class="bi bi-plus-circle me-1"></i> Add dimension
+                    </button>
+                </div>
+                <small class="text-muted d-block mb-3">
+                    Each dimension has a name and option values (e.g. size &rarr; S, M, L;
+                    color &rarr; red, blue). Products without variants simply have no
+                    dimensions.
+                </small>
+
+                <div v-if="dimensions.length === 0" class="alert alert-secondary py-2 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No variant dimensions — this product is sold as-is.
+                </div>
+
+                <div
+                    v-for="(dim, di) in dimensions"
+                    :key="dim.name"
+                    class="border rounded p-3 mb-2"
+                >
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">
+                            <i class="bi bi-diagram-3 me-2"></i>{{ dim.name }}
+                        </span>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            title="Remove dimension"
+                            @click="removeDimension(di)"
+                        >
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span
+                            v-for="(opt, oi) in dim.options"
+                            :key="opt"
+                            class="badge rounded-pill text-bg-secondary fs-6"
+                        >
+                            {{ opt }}
+                            <i
+                                class="bi bi-x-lg ms-1"
+                                style="cursor: pointer;"
+                                @click="removeOption(di, oi)"
+                            ></i>
+                        </span>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            @click="openOptionModal(di)"
+                        >
+                            <i class="bi bi-plus-circle me-1"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Section 2: Price Matrix — generated from the dimensions -->
+            <fieldset class="border rounded p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-grid-3x3-gap me-2"></i>Price Matrix</h6>
+                    <span class="badge text-bg-secondary">
+                        {{ combos.length }} variant{{ combos.length === 1 ? '' : 's' }}
+                    </span>
+                </div>
+                <small class="text-muted d-block mb-3">
+                    One purchasable variant per dimension combination. Blank price
+                    inherits the parent product price.
+                </small>
+
+                <table class="table table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Variant</th>
+                            <th>SKU</th>
+                            <th style="width: 160px;">Price <small class="text-muted">(blank = inherit)</small></th>
+                            <th style="width: 130px;">Quantity</th>
+                            <th style="width: 60px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="combos.length === 0">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No variants — add a dimension with options to generate the matrix.
+                            </td>
+                        </tr>
+                        <tr v-for="combo in combos" :key="comboKey(combo)">
+                            <td>
+                                <template v-for="(dim, i) in dimensions">
+                                    <span class="text-muted">{{ dim.name }}:</span>
+                                    <b> {{ combo[dim.name] }}</b>
+                                    <span v-if="i < dimensions.length - 1" class="text-muted"> / </span>
+                                </template>
+                            </td>
+                            <td>
+                                <input
+                                    class="form-control form-control-sm"
+                                    v-model="variants[comboKey(combo)].sku"
+                                    placeholder="SKU"
+                                >
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="form-control form-control-sm"
+                                    v-model="variants[comboKey(combo)].price"
+                                    placeholder="parent price"
+                                >
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    class="form-control form-control-sm"
+                                    v-model="variants[comboKey(combo)].quantity"
+                                >
+                            </td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    title="Remove this combination"
+                                    @click="removeCombination(combo)"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+
+            <!-- Add-dimension modal -->
+            <div
+                class="modal fade show"
+                tabindex="-1"
+                style="display: block; background: rgba(0,0,0,0.5);"
+                v-if="showDimModal"
+            >
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Dimension</h5>
+                            <button type="button" class="btn-close" @click="showDimModal = false"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input class="form-control" v-model="newDimName" placeholder="e.g. size">
+                            </div>
+                            <div>
+                                <label class="form-label">Options (comma-separated)</label>
+                                <input class="form-control" v-model="newDimOptions" placeholder="e.g. S, M, L">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="showDimModal = false">Cancel</button>
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                @click="addDimension"
+                                :disabled="!newDimName.trim() || !newDimOptions.trim()"
+                            >
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add-option modal -->
+            <div
+                class="modal fade show"
+                tabindex="-1"
+                style="display: block; background: rgba(0,0,0,0.5);"
+                v-if="showOptionModal"
+            >
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Option</h5>
+                            <button type="button" class="btn-close" @click="showOptionModal = false"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label">
+                                Option value for <b>{{ optionModalDim }}</b>
+                            </label>
+                            <input
+                                class="form-control"
+                                v-model="newOptionValue"
+                                placeholder="e.g. XL"
+                                @keyup.enter="addOption"
+                            >
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="showOptionModal = false">Cancel</button>
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                @click="addOption"
+                                :disabled="!newOptionValue.trim()"
+                            >
+                                <i class="bi bi-plus-circle me-1"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>

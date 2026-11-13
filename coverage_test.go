@@ -306,6 +306,33 @@ func TestCoverageProductUpdateAjax(t *testing.T) {
 		t.Fatalf("expected memo round-trip, got %v", notesResp["memo"])
 	}
 
+	covPostOK(t, env, "product_update", "save-variants", extra, map[string]any{
+		"dimensions": []map[string]any{{"name": "size", "required": true, "options": []string{"S", "M"}}},
+		"variants": []map[string]any{
+			{"values": map[string]any{"size": "S"}, "sku": "P-S", "price": "9.99", "quantity": "5"},
+			{"values": map[string]any{"size": "M"}, "sku": "P-M", "price": "", "quantity": "3"},
+		},
+	})
+	variantsResp := covPostResp[map[string]any](t, env, "product_update", "load-variants", extra, map[string]any{})
+	loadedVariants, _ := variantsResp["variants"].([]any)
+	if len(loadedVariants) != 2 {
+		t.Fatalf("expected 2 variants, got %v", variantsResp["variants"])
+	}
+	dims, _ := variantsResp["dimensions"].([]any)
+	if len(dims) != 1 {
+		t.Fatalf("expected 1 dimension, got %v", variantsResp["dimensions"])
+	}
+
+	covPostOK(t, env, "product_update", "save-variants", extra, map[string]any{
+		"dimensions": []map[string]any{},
+		"variants":   []map[string]any{},
+	})
+	variantsResp = covPostResp[map[string]any](t, env, "product_update", "load-variants", extra, map[string]any{})
+	loadedVariants, _ = variantsResp["variants"].([]any)
+	if len(loadedVariants) != 0 {
+		t.Fatalf("expected 0 variants after clear, got %v", variantsResp["variants"])
+	}
+
 	covPostOK(t, env, "product_update", "save-details", extra, map[string]any{
 		"status": "active", "title": "Upd", "price": "5.00", "quantity": "2",
 	})

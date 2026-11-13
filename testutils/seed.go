@@ -1,4 +1,4 @@
-package main
+package testutils
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/dromara/carbon/v2"
 )
 
-// seedDB populates the store with sample data so the admin panel has
+// SeedDB populates the store with sample data so the admin panel has
 // enough rows to exercise pagination, filtering, and sorting.
 //
 // Creates:
@@ -17,7 +17,7 @@ import (
 //   - 40 discounts (mixed statuses/types/amounts)
 //   - 30 orders (mixed statuses, each with 1-3 line items)
 //   - 40 categories (mixed statuses)
-func seedDB(store shopstore.StoreInterface, logger *slog.Logger) {
+func SeedDB(store shopstore.StoreInterface, logger *slog.Logger) {
 	ctx := context.Background()
 
 	seedCategories(ctx, store, logger)
