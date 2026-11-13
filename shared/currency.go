@@ -69,7 +69,10 @@ func FormatPrice(amount any, currency string) string {
 	formatted := cast.ToString(value)
 
 	parts := strings.SplitN(formatted, ".", 2)
-	intPart := parts[0]
+	intPart := ""
+	if len(parts) > 0 {
+		intPart = parts[0]
+	}
 	fracPart := "00"
 	if len(parts) == 2 {
 		fracPart = parts[1]

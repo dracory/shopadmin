@@ -109,6 +109,11 @@ func seedDiscounts(ctx context.Context, store shopstore.StoreInterface, logger *
 }
 
 func seedOrders(ctx context.Context, store shopstore.StoreInterface, logger *slog.Logger, products []shopstore.ProductInterface) {
+	if len(products) == 0 {
+		logger.Warn("seedOrders: no products available, skipping orders")
+		return
+	}
+
 	statuses := []string{"pending", "pending", "completed", "completed", "cancelled", "shipped"}
 
 	for i := 1; i <= 30; i++ {

@@ -28,6 +28,9 @@ func TestSaveDetailsAcceptsStringPrice(t *testing.T) {
 	}
 
 	saved, _ := env.store.ProductFindByID(context.Background(), product.GetID())
+	if saved == nil {
+		t.Fatal("expected saved product, got nil")
+	}
 	if saved.GetPrice() != "19.99" || saved.GetQuantity() != "7" {
 		t.Errorf("expected price=19.99 quantity=7, got price=%q quantity=%q", saved.GetPrice(), saved.GetQuantity())
 	}
@@ -59,6 +62,9 @@ func TestSaveDetailsAcceptsNumericPrice(t *testing.T) {
 	}
 
 	saved, _ := env.store.ProductFindByID(context.Background(), product.GetID())
+	if saved == nil {
+		t.Fatal("expected saved product, got nil")
+	}
 	if saved.GetPrice() != "24.5" || saved.GetQuantity() != "3" {
 		t.Errorf("expected price=24.5 quantity=3, got price=%q quantity=%q", saved.GetPrice(), saved.GetQuantity())
 	}
