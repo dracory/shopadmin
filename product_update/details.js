@@ -18,12 +18,10 @@ function initDetailsApp() {
             return {
                 loading: false,
                 productID: typeof productId !== 'undefined' ? productId : '',
-                status: '',
                 title: '',
                 description: '',
                 price: '',
-                quantity: '',
-                memo: ''
+                quantity: ''
             };
         },
         watch: {
@@ -71,12 +69,10 @@ function initDetailsApp() {
                     if (contentType && contentType.includes('application/json')) {
                         const data = await response.json();
                         if (data.status === 'success') {
-                            this.status = data.data.status || '';
                             this.title = data.data.title || '';
                             this.description = data.data.description || '';
                             this.price = data.data.price || '';
                             this.quantity = data.data.quantity || '';
-                            this.memo = data.data.memo || '';
                         } else {
                             Notiflix.Notify.failure(data.message || 'Failed to load details');
                         }
@@ -95,7 +91,6 @@ function initDetailsApp() {
 
             async saveDetails() {
                 // Validate form
-                if (!this.status) { Notiflix.Notify.failure('Status is required'); return; }
                 if (!this.title) { Notiflix.Notify.failure('Title is required'); return; }
                 if (!this.price) { Notiflix.Notify.failure('Price is required'); return; }
                 if (!this.quantity) { Notiflix.Notify.failure('Quantity is required'); return; }
@@ -118,14 +113,12 @@ function initDetailsApp() {
                         },
                         body: JSON.stringify({
                             product_id: this.productID,
-                            status: this.status,
                             title: this.title,
                             description: this.description,
                             // <input type="number"> auto-casts v-model to a
                             // number; send strings to match the API contract
                             price: String(this.price),
-                            quantity: String(this.quantity),
-                            memo: this.memo
+                            quantity: String(this.quantity)
                         })
                     });
                     

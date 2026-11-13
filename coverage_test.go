@@ -289,8 +289,21 @@ func TestCoverageProductUpdateAjax(t *testing.T) {
 	p := covSeedProduct(t, env)
 	extra := url.Values{"product_id": {p.GetID()}}
 
-	for _, action := range []string{"load-details", "load-media", "load-metadata", "load-tags"} {
+	for _, action := range []string{"load-status", "load-details", "load-notes", "load-media", "load-metadata", "load-tags"} {
 		covPostOK(t, env, "product_update", action, extra, map[string]any{})
+	}
+
+	covPostOK(t, env, "product_update", "save-status", extra, map[string]any{"status": "disabled"})
+
+	statusResp := covPostResp[map[string]any](t, env, "product_update", "load-status", extra, map[string]any{})
+	if statusResp["status_value"] != "disabled" {
+		t.Fatalf("expected status_value=disabled, got %v", statusResp["status_value"])
+	}
+
+	covPostOK(t, env, "product_update", "save-notes", extra, map[string]any{"memo": "internal note"})
+	notesResp := covPostResp[map[string]any](t, env, "product_update", "load-notes", extra, map[string]any{})
+	if notesResp["memo"] != "internal note" {
+		t.Fatalf("expected memo round-trip, got %v", notesResp["memo"])
 	}
 
 	covPostOK(t, env, "product_update", "save-details", extra, map[string]any{

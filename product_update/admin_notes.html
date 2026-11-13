@@ -1,0 +1,46 @@
+<!-- Card header: collapse toggle (title left) + Save button (right) -->
+<div
+    class="card-header d-flex justify-content-between align-items-center"
+    style="cursor: pointer; user-select: none;"
+    @click="collapsed = !collapsed"
+>
+    <h4 style="margin-bottom: 0;">
+        <i class="bi me-2" :class="collapsed ? 'bi-plus-circle' : 'bi-dash-circle'"></i>
+        <span>Admin Notes</span>
+    </h4>
+    <!-- Wrapper stops propagation so a click on Save never toggles. -->
+    <div @click.stop>
+        <button
+            type="button"
+            class="btn btn-success"
+            @click="saveNotes"
+        >
+            <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <i v-else class="bi bi-check-lg me-2"></i>
+            Save
+        </button>
+    </div>
+</div>
+
+<!-- Collapsible card body -->
+<div id="productAdminNotesCollapse" class="collapse" :class="{ show: !collapsed }">
+    <div class="card-body">
+        <template v-if="loading">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading data...</span>
+                </div>
+            </div>
+        </template>
+
+        <template v-else>
+            <small class="text-muted d-block mb-2">Internal notes about this product. Only visible to administrators.</small>
+            <textarea
+                class="form-control"
+                v-model="memo"
+                rows="4"
+                placeholder="Enter admin notes..."
+            ></textarea>
+        </template>
+    </div>
+</div>

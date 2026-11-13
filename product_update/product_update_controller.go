@@ -71,6 +71,14 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 			return u.handleLoadCategories(w, r, productID)
 		case "save-categories":
 			return u.handleSaveCategories(w, r, productID)
+		case "load-status":
+			return u.handleLoadStatus(w, r, productID)
+		case "save-status":
+			return u.handleSaveStatus(w, r, productID)
+		case "load-notes":
+			return u.handleLoadNotes(w, r, productID)
+		case "save-notes":
+			return u.handleSaveNotes(w, r, productID)
 		case "load-details":
 			return u.handleLoadDetails(w, r, productID)
 		case "save-details":
@@ -261,19 +269,32 @@ func (u *ui) page(r *http.Request, product shopstore.ProductInterface, view stri
 	sidebarSection := sections.RenderPosition(shared.PositionSidebar)
 	bottomSection := sections.RenderPosition(shared.PositionBottom)
 
-	// The Categories card lives below the product details card and is
-	// managed independently through its own load/save handlers.
+	// The Status and Categories cards are managed independently through
+	// their own load/save handlers. Status sits on top of the other
+	// cards; Categories sits below the product details card.
+	var statusCard hb.TagInterface
 	var categoriesCard hb.TagInterface
+	var adminNotesCard hb.TagInterface
 	if view == "details" {
+		statusComponent := NewProductStatusComponent(u)
+		statusComponent.Mount(r, product, productID)
+		statusCard = statusComponent.Render()
+
 		categoriesComponent := NewProductCategoriesComponent(u)
 		categoriesComponent.Mount(r, product, productID)
 		categoriesCard = categoriesComponent.Render()
+
+		adminNotesComponent := NewProductAdminNotesComponent(u)
+		adminNotesComponent.Mount(r, product, productID)
+		adminNotesCard = adminNotesComponent.Render()
 	}
 
 	mainCardGroup := hb.Div().
 		ChildIf(beforeFormSection != nil, beforeFormSection).
+		ChildIf(statusCard != nil, statusCard).
 		Child(card).
 		ChildIf(categoriesCard != nil, categoriesCard).
+		ChildIf(adminNotesCard != nil, adminNotesCard).
 		ChildIf(afterFormSection != nil, afterFormSection)
 
 	var middleLayout hb.TagInterface
@@ -789,6 +810,159 @@ func (u *ui) handleSaveCategories(w http.ResponseWriter, r *http.Request, produc
 	return ""
 }
 
+// handleLoadStatus returns the product status for the Status card.
+func (u *ui) handleLoadStatus(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	writeJSON(w, "success", "Status loaded successfully", map[string]any{
+		"status_value": product.GetStatus(),
+	})
+	return ""
+}
+
+// handleSaveStatus updates only the product status; no other product
+// data is modified.
+func (u *ui) handleSaveStatus(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	var reqBody struct {
+		Status string `json:"status"`
+	}
+	bodyBytes, _ := io.ReadAll(r.Body)
+	if err := json.Unmarshal(bodyBytes, &reqBody); err != nil {
+		u.Logger().Error("handleSaveStatus: failed to decode request body", "error", err, "body", string(bodyBytes))
+		writeJSONError(w, "Invalid request body")
+		return ""
+	}
+
+	if reqBody.Status == "" {
+		writeJSONError(w, "Status is required")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	product.SetStatus(reqBody.Status)
+
+	err = shopStore.ProductUpdate(ctx, product)
+	if err != nil {
+		u.Logger().Error("Failed to save product", "error", err)
+		writeJSONError(w, "Failed to save product")
+		return ""
+	}
+
+	writeJSON(w, "success", "Status saved successfully", nil)
+	return ""
+}
+
+// handleLoadNotes returns the product memo for the Admin Notes card.
+func (u *ui) handleLoadNotes(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	writeJSON(w, "success", "Admin notes loaded successfully", map[string]any{
+		"memo": product.GetMemo(),
+	})
+	return ""
+}
+
+// handleSaveNotes updates only the product memo; no other product data
+// is modified.
+func (u *ui) handleSaveNotes(w http.ResponseWriter, r *http.Request, productID string) string {
+	ctx := r.Context()
+
+	shopStore := u.Store()
+	if shopStore == nil {
+		writeJSONError(w, "Shop store not available")
+		return ""
+	}
+
+	var reqBody struct {
+		Memo string `json:"memo"`
+	}
+	bodyBytes, _ := io.ReadAll(r.Body)
+	if err := json.Unmarshal(bodyBytes, &reqBody); err != nil {
+		u.Logger().Error("handleSaveNotes: failed to decode request body", "error", err, "body", string(bodyBytes))
+		writeJSONError(w, "Invalid request body")
+		return ""
+	}
+
+	product, err := shopStore.ProductFindByID(ctx, productID)
+	if err != nil {
+		u.Logger().Error("Failed to load product", "error", err)
+		writeJSONError(w, "Failed to load product")
+		return ""
+	}
+
+	if product == nil {
+		writeJSONError(w, "Product not found")
+		return ""
+	}
+
+	product.SetMemo(reqBody.Memo)
+
+	err = shopStore.ProductUpdate(ctx, product)
+	if err != nil {
+		u.Logger().Error("Failed to save product", "error", err)
+		writeJSONError(w, "Failed to save product")
+		return ""
+	}
+
+	writeJSON(w, "success", "Admin notes saved successfully", nil)
+	return ""
+}
+
 func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request, productID string) string {
 	ctx := r.Context()
 
@@ -812,12 +986,10 @@ func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request, productID
 
 	writeJSON(w, "success", "Details loaded successfully", map[string]any{
 		"data": map[string]any{
-			"status":      product.GetStatus(),
 			"title":       product.GetTitle(),
 			"description": product.GetDescription(),
 			"price":       product.GetPrice(),
 			"quantity":    product.GetQuantity(),
-			"memo":        product.GetMemo(),
 		},
 	})
 	return ""
@@ -833,12 +1005,10 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 	}
 
 	var reqBody struct {
-		Status      string          `json:"status"`
 		Title       string          `json:"title"`
 		Description json.RawMessage `json:"description"`
 		Price       json.RawMessage `json:"price"`
 		Quantity    json.RawMessage `json:"quantity"`
-		Memo        string          `json:"memo"`
 	}
 	bodyBytes, _ := io.ReadAll(r.Body)
 	if err := json.Unmarshal(bodyBytes, &reqBody); err != nil {
@@ -878,12 +1048,10 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, productID
 		return ""
 	}
 
-	product.SetStatus(reqBody.Status)
 	product.SetTitle(reqBody.Title)
 	product.SetDescription(description)
 	product.SetPrice(price)
 	product.SetQuantity(quantity)
-	product.SetMemo(reqBody.Memo)
 
 	err = shopStore.ProductUpdate(ctx, product)
 	if err != nil {

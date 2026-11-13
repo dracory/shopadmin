@@ -31,34 +31,6 @@
             <div class="card-body">
                 <form @submit.prevent="saveDetails">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Product ID</label>
-                            <input
-                                type="text"
-                                class="form-control"
-                                v-model="productID"
-                                readonly
-                                disabled
-                                tabindex="-1"
-                            >
-                            <small class="text-muted">The reference number (ID) of the product.</small>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Status <span class="text-danger">*</span></label>
-                            <select
-                                class="form-select"
-                                v-model="status"
-                                required
-                            >
-                                <option value="">- not selected -</option>
-                                <option value="active">Active</option>
-                                <option value="disabled">Disabled</option>
-                                <option value="draft">Draft</option>
-                            </select>
-                            <small class="text-muted">The status of the product.</small>
-                        </div>
-
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
                             <input
@@ -104,16 +76,6 @@
                             <small class="text-muted">The quantity of the product that is available to purchase.</small>
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Admin Notes</label>
-                            <textarea
-                                class="form-control"
-                                v-model="memo"
-                                rows="3"
-                                placeholder="Enter admin notes..."
-                            ></textarea>
-                            <small class="text-muted">Admin notes for this product. These notes will not be visible to the public.</small>
-                        </div>
                     </div>
                 </form>
             </div>

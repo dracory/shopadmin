@@ -1,0 +1,46 @@
+<!-- Card header: collapse toggle (title left) + Save button (right) -->
+<div
+    class="card-header d-flex justify-content-between align-items-center"
+    style="cursor: pointer; user-select: none;"
+    @click="collapsed = !collapsed"
+>
+    <h4 style="margin-bottom: 0;">
+        <i class="bi me-2" :class="collapsed ? 'bi-plus-circle' : 'bi-dash-circle'"></i>
+        <span>Status</span>
+    </h4>
+    <!-- Wrapper stops propagation so a click on Save never toggles. -->
+    <div @click.stop>
+        <button
+            type="button"
+            class="btn btn-success"
+            @click="saveStatus"
+        >
+            <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <i v-else class="bi bi-check-lg me-2"></i>
+            Save
+        </button>
+    </div>
+</div>
+
+<!-- Collapsible card body -->
+<div id="productStatusCollapse" class="collapse" :class="{ show: !collapsed }">
+    <div class="card-body">
+        <template v-if="loading">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading data...</span>
+                </div>
+            </div>
+        </template>
+
+        <template v-else>
+            <label class="form-label">Status</label>
+            <select class="form-select" v-model="status">
+                <option value="active">Active</option>
+                <option value="disabled">Disabled</option>
+                <option value="draft">Draft</option>
+            </select>
+            <small class="text-muted">The status of the product.</small>
+        </template>
+    </div>
+</div>
