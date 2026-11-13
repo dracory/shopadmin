@@ -5,6 +5,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -16,12 +17,15 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/dracory/shopadmin"
 	"github.com/dracory/shopadmin/testutils"
+	"github.com/dracory/shopstore"
 	_ "modernc.org/sqlite"
 )
 
 var (
-	baseURL  string
-	allocCtx context.Context
+	baseURL       string
+	allocCtx      context.Context
+	testStore     shopstore.StoreInterface
+	seedProductID string
 )
 
 const adminPath = "/admin/shop"
@@ -34,6 +38,13 @@ func TestMain(m *testing.M) {
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	testutils.SeedDB(store, logger)
+	testStore = store
+
+	products, err := store.ProductList(context.Background(), shopstore.NewProductQuery())
+	if err != nil || len(products) == 0 {
+		panic("e2e: no seeded products: " + fmt.Sprint(err))
+	}
+	seedProductID = products[0].GetID()
 
 	admin, err := shopadmin.New(shopadmin.AdminOptions{
 		Store:        store,

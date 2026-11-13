@@ -72,6 +72,7 @@ func (u *ui) renderPage(r *http.Request) string {
 	linksHelper := shared.NewLinksFromRequest(r)
 	initScript := hb.Script(`
 		const urlCreateCategory = '` + linksHelper.CategoryCreate(map[string]string{"action": actionCreateCategory}) + `';
+		const urlCategories = '` + linksHelper.Categories(map[string]string{}) + `';
 	`)
 
 	content := hb.Div().
@@ -81,7 +82,8 @@ func (u *ui) renderPage(r *http.Request) string {
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Categories. Create Category")).
 		Child(initScript).
-		Child(hb.Div().ID("app"))
+		Child(categoryCreateForm()).
+		Child(hb.Script(categoryCreateJS))
 
 	return u.Layout(nil, r, "Create Category | Shop", content.ToHTML(), struct {
 		Styles     []string
@@ -144,3 +146,96 @@ func (u *ui) handleCreateCategory(w http.ResponseWriter, r *http.Request) string
 	}).ToString()))
 	return ""
 }
+
+// categoryCreateForm renders the create-category form (title, status,
+// description, parent ID). Submitted via categoryCreateJS to the
+// create-category action endpoint.
+func categoryCreateForm() hb.TagInterface {
+	titleInput := hb.Input().
+		Type("text").
+		ID("category-title").
+		Class("form-control").
+		Attr("name", "title").
+		Attr("required", "required").
+		Attr("placeholder", "Category title")
+
+	statusSelect := hb.Select().
+		ID("category-status").
+		Class("form-select").
+		Attr("name", "status").
+		Child(hb.Option().Value("active").Text("Active")).
+		Child(hb.Option().Value("inactive").Text("Inactive")).
+		Child(hb.Option().Value("draft").Text("Draft"))
+
+	descriptionInput := hb.Textarea().
+		ID("category-description").
+		Class("form-control").
+		Attr("name", "description").
+		Attr("rows", "4").
+		Attr("placeholder", "Category description")
+
+	parentInput := hb.Input().
+		Type("text").
+		ID("category-parent-id").
+		Class("form-control").
+		Attr("name", "parent_id").
+		Attr("placeholder", "Parent category ID (optional)")
+
+	submitButton := hb.Button().
+		Type("button").
+		ID("btn-create-category").
+		Class("btn btn-primary").
+		Attr("onclick", "submitCategoryCreate()").
+		HTML(`<i class="bi bi-check-lg me-1"></i> Create Category`)
+
+	return hb.Div().
+		Class("card bg-body-tertiary").
+		Style("max-width: 640px;").
+		Child(hb.Div().Class("card-body").
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-title").Text("Title")).
+				Child(titleInput)).
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-status").Text("Status")).
+				Child(statusSelect)).
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-description").Text("Description")).
+				Child(descriptionInput)).
+			Child(hb.Div().Class("mb-3").
+				Child(hb.Label().Class("form-label").Attr("for", "category-parent-id").Text("Parent Category")).
+				Child(parentInput)).
+			Child(submitButton))
+}
+
+// categoryCreateJS posts the form to the create-category endpoint and
+// redirects to the category manager on success.
+const categoryCreateJS = `
+async function submitCategoryCreate() {
+	const title = document.getElementById('category-title').value.trim();
+	if (!title) {
+		Swal.fire('Validation', 'Title is required', 'warning');
+		return;
+	}
+	const body = {
+		title: title,
+		status: document.getElementById('category-status').value,
+		description: document.getElementById('category-description').value,
+		parent_id: document.getElementById('category-parent-id').value.trim(),
+	};
+	try {
+		const response = await fetch(urlCreateCategory, {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify(body),
+		});
+		const result = await response.json();
+		if (result.status === 'success') {
+			window.location.href = urlCategories;
+		} else {
+			Swal.fire('Error', result.message || 'Failed to create category', 'error');
+		}
+	} catch (error) {
+		Swal.fire('Error', 'Failed to create category', 'error');
+	}
+}
+`

@@ -36,6 +36,7 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		"categoryDelete":         linksHelper.Categories(map[string]string{"action": actionCategoryDelete}),
 		"categoryDeleteSelected": linksHelper.Categories(map[string]string{"action": actionCategoryDeleteSelected}),
 		"categoryUpdate":         linksHelper.CategoryUpdate(map[string]string{}),
+		"categoryCreate":         linksHelper.CategoryCreate(map[string]string{}),
 	}
 
 	urlsJSON, _ := json.Marshal(urls)
