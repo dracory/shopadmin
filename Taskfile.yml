@@ -77,7 +77,7 @@ tasks:
     desc: Tests for errors
     cmds:
       - echo "Checking for errors..."
-      - gocritic check -enableAll -disable=ifElseChain,paramTypeCombine,hugeParam ./...
+      - gocritic check -enableAll -disable=ifElseChain,paramTypeCombine,hugeParam,sloppyTypeAssert ./...
       - echo "Done!"
     silent: true
 

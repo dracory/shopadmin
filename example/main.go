@@ -35,11 +35,14 @@ const (
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	os.Exit(run(logger))
+}
 
+func run(logger *slog.Logger) int {
 	db, err := openDB(dbFile)
 	if err != nil {
 		logger.Error("failed to open database", "err", err)
-		os.Exit(1)
+		return 1
 	}
 	defer func() { _ = db.Close() }()
 
@@ -56,7 +59,7 @@ func main() {
 	})
 	if err != nil {
 		logger.Error("failed to create shopstore", "err", err)
-		os.Exit(1)
+		return 1
 	}
 
 	// Seed the in-memory DB with sample data for testing pagination,
@@ -77,7 +80,7 @@ func main() {
 	})
 	if err != nil {
 		logger.Error("failed to create shopadmin", "err", err)
-		os.Exit(1)
+		return 1
 	}
 
 	mux := http.NewServeMux()
@@ -107,8 +110,9 @@ func main() {
 	fmt.Printf("\n  shopadmin example running:\n    Landing:  http://localhost%s/\n    Admin:    http://localhost%s\n\n", portFromAddr(addr), adminURL)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		logger.Error("server failed", "err", err)
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 // openDB opens a SQLite database. For ":memory:" a fresh database is

@@ -112,7 +112,7 @@ func TestHandle_HomeController(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop", nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -141,7 +141,7 @@ func TestHandle_ProductManagerController(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=products", nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=products", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -170,7 +170,7 @@ func TestHandle_UnknownControllerFallsBackToHome(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=nonexistent", nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=nonexistent", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -200,7 +200,7 @@ func TestHandle_AuthUserIDRedirect(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop", nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -217,7 +217,7 @@ type mockCustomerResolver struct {
 	ids   []string
 }
 
-func (m *mockCustomerResolver) FindByID(_ context.Context, id string) (string, string) {
+func (m *mockCustomerResolver) FindByID(_ context.Context, id string) (name string, email string) {
 	return m.name, m.email
 }
 
@@ -241,7 +241,7 @@ func TestCustomerResolver_NilSafe(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=orders", nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=orders", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -303,7 +303,7 @@ func TestContentTypeHeaders(t *testing.T) {
 	}
 
 	t.Run("Page rendering sets text/html", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=discount_update&discount_id=nonexistent", nil)
+		req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=discount_update&discount_id=nonexistent", http.NoBody)
 		rr := httptest.NewRecorder()
 
 		a.Handle(rr, req)
@@ -319,7 +319,7 @@ func TestContentTypeHeaders(t *testing.T) {
 	})
 
 	t.Run("AJAX action sets application/json", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/shop?action=load-details&controller=discount_update&discount_id=nonexistent", nil)
+		req := httptest.NewRequest(http.MethodGet, "/admin/shop?action=load-details&controller=discount_update&discount_id=nonexistent", http.NoBody)
 		rr := httptest.NewRecorder()
 
 		a.Handle(rr, req)
@@ -335,7 +335,7 @@ func TestContentTypeHeaders(t *testing.T) {
 	})
 
 	t.Run("Home AJAX action load-stats sets application/json", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/shop?action=load-stats&controller=home", nil)
+		req := httptest.NewRequest(http.MethodGet, "/admin/shop?action=load-stats&controller=home", http.NoBody)
 		rr := httptest.NewRecorder()
 
 		a.Handle(rr, req)
@@ -392,7 +392,7 @@ func TestProductView_CustomSections(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_view&product_id="+p.GetID(), nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_view&product_id="+p.GetID(), http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -488,7 +488,7 @@ func TestProductUpdate_CustomSections(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_update&product_id="+p.GetID(), nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_update&product_id="+p.GetID(), http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -557,7 +557,7 @@ func TestCustomSections_NilAndErrorHandling(t *testing.T) {
 		t.Fatalf("Failed to create admin: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_view&product_id="+p.GetID(), nil)
+	req := httptest.NewRequest(http.MethodGet, "/admin/shop?controller=product_view&product_id="+p.GetID(), http.NoBody)
 	rr := httptest.NewRecorder()
 
 	a.Handle(rr, req)
@@ -577,10 +577,3 @@ var errTestError = &testError{}
 type testError struct{}
 
 func (e *testError) Error() string { return "test renderer error" }
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
