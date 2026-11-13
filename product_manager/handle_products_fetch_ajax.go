@@ -69,6 +69,21 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 
 	applyConditions(query, reqBody.Conditions)
 
+	productIDs, categoryUsed, err := categoryProductIDs(ctx, shopStore, reqBody.Conditions)
+	if err != nil {
+		u.Logger().Error("Failed to resolve category filter", "error", err)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(api.Error("Failed to load products").ToString()))
+		return ""
+	}
+	if categoryUsed {
+		if len(productIDs) == 0 {
+			query.SetID("")
+		} else {
+			query.SetIDIn(productIDs)
+		}
+	}
+
 	products, err := shopStore.ProductList(ctx, query)
 	if err != nil {
 		u.Logger().Error("Failed to load products", "error", err)

@@ -34,6 +34,7 @@ function initProductManager() {
             { value: 'draft', label: 'Draft' },
           ] },
           { value: 'id', label: 'ID', operators: ['equals'], inputType: 'text', placeholder: 'product id' },
+          { value: 'category_id', label: 'Category', operators: ['equals'], inputType: 'select', placeholder: '', options: (window.productManagerCategories || []).map(c => ({ value: c.id, label: c.title })) },
           { value: 'date_from', label: 'Created after', operators: ['equals'], inputType: 'date', placeholder: '' },
           { value: 'date_to', label: 'Created before', operators: ['equals'], inputType: 'date', placeholder: '' },
         ],

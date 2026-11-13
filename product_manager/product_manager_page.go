@@ -8,7 +8,9 @@ import (
 
 	"github.com/dracory/cdn"
 	"github.com/dracory/hb"
+	"github.com/dracory/neat"
 	"github.com/dracory/shopadmin/shared"
+	"github.com/dracory/shopstore"
 )
 
 var (
@@ -43,6 +45,24 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 	urlsJSON, _ := json.Marshal(urls)
 	urlsScript := hb.Script(fmt.Sprintf("window.productManagerUrls = %s;", string(urlsJSON)))
 
+	categories, err := u.Store().CategoryList(r.Context(), shopstore.NewCategoryQuery().
+		SetStatus(shopstore.CATEGORY_STATUS_ACTIVE).
+		SetOrderBy(shopstore.COLUMN_TITLE).
+		SetSortDirection(neat.SortAsc))
+	categoryItems := []map[string]any{}
+	if err != nil {
+		u.Logger().Error("Failed to load categories for filter", "error", err)
+	} else {
+		for _, category := range categories {
+			categoryItems = append(categoryItems, map[string]any{
+				"id":    category.GetID(),
+				"title": category.GetTitle(),
+			})
+		}
+	}
+	categoriesJSON, _ := json.Marshal(categoryItems)
+	categoriesScript := hb.Script(fmt.Sprintf("window.productManagerCategories = %s;", string(categoriesJSON)))
+
 	content := hb.Div().
 		Class("container").
 		Class("py-4").
@@ -50,6 +70,7 @@ func (u *ui) renderPage(w http.ResponseWriter, r *http.Request) string {
 		Child(breadcrumbs).
 		Child(shared.PageHeader("Products. Product Manager")).
 		Child(urlsScript).
+		Child(categoriesScript).
 		Child(hb.Raw(productsHTML)).
 		Child(hb.Script(productsJS))
 

@@ -1,6 +1,7 @@
 package product_manager
 
 import (
+	"context"
 	"strings"
 
 	"github.com/dracory/shopstore"
@@ -23,6 +24,7 @@ const (
 	CondFieldSearch   = "search"
 	CondFieldStatus   = "status"
 	CondFieldID       = "id"
+	CondFieldCategory = "category_id"
 	CondFieldDateFrom = "date_from"
 	CondFieldDateTo   = "date_to"
 )
@@ -56,4 +58,34 @@ func applyConditions(query shopstore.ProductQueryInterface, conds []condition) {
 			query.SetCreatedAtLte(val + " 23:59:59")
 		}
 	}
+}
+
+// categoryProductIDs resolves category conditions to product IDs via the
+// product-category link table. Multiple category conditions: last one wins.
+func categoryProductIDs(ctx context.Context, store shopstore.StoreInterface, conds []condition) ([]string, bool, error) {
+	categoryID := ""
+	for _, c := range conds {
+		if c.Field != CondFieldCategory {
+			continue
+		}
+		if val := strings.TrimSpace(c.Value); val != "" {
+			categoryID = val
+		}
+	}
+
+	if categoryID == "" {
+		return nil, false, nil
+	}
+
+	links, err := store.ProductCategoryList(ctx, shopstore.NewProductCategoryQuery().
+		SetCategoryID(categoryID))
+	if err != nil {
+		return nil, true, err
+	}
+
+	ids := make([]string, 0, len(links))
+	for _, link := range links {
+		ids = append(ids, link.GetProductID())
+	}
+	return ids, true, nil
 }
