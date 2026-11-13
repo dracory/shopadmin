@@ -13,7 +13,7 @@ func (u *ui) handleSettingDeleteSelected(w http.ResponseWriter, r *http.Request)
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
@@ -22,13 +22,13 @@ func (u *ui) handleSettingDeleteSelected(w http.ResponseWriter, r *http.Request)
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Invalid request body").ToString()))
+		_, _ = w.Write([]byte(api.Error("Invalid request body").ToString()))
 		return ""
 	}
 
 	if len(reqBody.BulkSettingIDs) == 0 {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("No setting IDs provided").ToString()))
+		_, _ = w.Write([]byte(api.Error("No setting IDs provided").ToString()))
 		return ""
 	}
 
@@ -39,6 +39,6 @@ func (u *ui) handleSettingDeleteSelected(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.Success("Settings deleted successfully").ToString()))
+	_, _ = w.Write([]byte(api.Success("Settings deleted successfully").ToString()))
 	return ""
 }

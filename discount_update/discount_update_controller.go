@@ -203,7 +203,7 @@ func (u *ui) handleSaveDetails(w http.ResponseWriter, r *http.Request, discountI
 	}
 	bodyBytes, _ := io.ReadAll(r.Body)
 	u.Logger().Debug("discount_update handleSaveDetails raw body", "body", string(bodyBytes), "discount_id", discountID)
-	json.Unmarshal(bodyBytes, &reqBody)
+	_ = json.Unmarshal(bodyBytes, &reqBody)
 
 	discount, err := shopStore.DiscountFindByID(r.Context(), discountID)
 	if err != nil {

@@ -13,7 +13,7 @@ func (u *ui) handleCategoryDelete(w http.ResponseWriter, r *http.Request) string
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
@@ -22,24 +22,24 @@ func (u *ui) handleCategoryDelete(w http.ResponseWriter, r *http.Request) string
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Invalid request body").ToString()))
+		_, _ = w.Write([]byte(api.Error("Invalid request body").ToString()))
 		return ""
 	}
 
 	if reqBody.CategoryID == "" {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Category ID is required").ToString()))
+		_, _ = w.Write([]byte(api.Error("Category ID is required").ToString()))
 		return ""
 	}
 
 	if err := shopStore.CategoryDeleteByID(ctx, reqBody.CategoryID); err != nil {
 		u.Logger().Error("Failed to delete category", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Failed to delete category").ToString()))
+		_, _ = w.Write([]byte(api.Error("Failed to delete category").ToString()))
 		return ""
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.Success("Category deleted successfully").ToString()))
+	_, _ = w.Write([]byte(api.Success("Category deleted successfully").ToString()))
 	return ""
 }

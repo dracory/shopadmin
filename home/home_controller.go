@@ -119,7 +119,7 @@ func (u *ui) handleLoadStats(w http.ResponseWriter, r *http.Request) string {
 
 	if u.Store() == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
@@ -148,7 +148,7 @@ func (u *ui) handleLoadStats(w http.ResponseWriter, r *http.Request) string {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.SuccessWithData("Stats loaded successfully", map[string]any{
+	_, _ = w.Write([]byte(api.SuccessWithData("Stats loaded successfully", map[string]any{
 		"product_count":  productCount,
 		"category_count": categoryCount,
 		"discount_count": discountCount,

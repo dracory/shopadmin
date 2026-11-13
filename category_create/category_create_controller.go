@@ -101,7 +101,7 @@ func (u *ui) handleCreateCategory(w http.ResponseWriter, r *http.Request) string
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
@@ -113,13 +113,13 @@ func (u *ui) handleCreateCategory(w http.ResponseWriter, r *http.Request) string
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Invalid request body").ToString()))
+		_, _ = w.Write([]byte(api.Error("Invalid request body").ToString()))
 		return ""
 	}
 
 	if reqBody.Title == "" {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Title is required").ToString()))
+		_, _ = w.Write([]byte(api.Error("Title is required").ToString()))
 		return ""
 	}
 
@@ -133,12 +133,12 @@ func (u *ui) handleCreateCategory(w http.ResponseWriter, r *http.Request) string
 	if err := shopStore.CategoryCreate(ctx, category); err != nil {
 		u.Logger().Error("Failed to create category", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Failed to create category").ToString()))
+		_, _ = w.Write([]byte(api.Error("Failed to create category").ToString()))
 		return ""
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.SuccessWithData("Category created successfully", map[string]any{
+	_, _ = w.Write([]byte(api.SuccessWithData("Category created successfully", map[string]any{
 		"category_id": category.GetID(),
 	}).ToString()))
 	return ""

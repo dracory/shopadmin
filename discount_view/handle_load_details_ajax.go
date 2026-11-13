@@ -15,14 +15,14 @@ func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request) string {
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
 	discountID := r.URL.Query().Get("discount_id")
 	if discountID == "" {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Discount ID is required").ToString()))
+		_, _ = w.Write([]byte(api.Error("Discount ID is required").ToString()))
 		return ""
 	}
 
@@ -30,13 +30,13 @@ func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request) string {
 	if err != nil {
 		u.Logger().Error("Failed to load discount", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Failed to load discount").ToString()))
+		_, _ = w.Write([]byte(api.Error("Failed to load discount").ToString()))
 		return ""
 	}
 
 	if discount == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Discount not found").ToString()))
+		_, _ = w.Write([]byte(api.Error("Discount not found").ToString()))
 		return ""
 	}
 
@@ -46,7 +46,7 @@ func (u *ui) handleLoadDetails(w http.ResponseWriter, r *http.Request) string {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.SuccessWithData("Discount loaded successfully", map[string]any{
+	_, _ = w.Write([]byte(api.SuccessWithData("Discount loaded successfully", map[string]any{
 		"amount_formatted":      amountFormatted,
 		"id":                    discount.GetID(),
 		"code":                  discount.GetCode(),

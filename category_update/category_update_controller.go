@@ -109,14 +109,14 @@ func (u *ui) handleLoadCategory(w http.ResponseWriter, r *http.Request) string {
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
 	categoryID := req.GetStringTrimmed(r, "category_id")
 	if categoryID == "" {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Category ID is required").ToString()))
+		_, _ = w.Write([]byte(api.Error("Category ID is required").ToString()))
 		return ""
 	}
 
@@ -124,12 +124,12 @@ func (u *ui) handleLoadCategory(w http.ResponseWriter, r *http.Request) string {
 	if err != nil || category == nil {
 		u.Logger().Error("Failed to load category", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Category not found").ToString()))
+		_, _ = w.Write([]byte(api.Error("Category not found").ToString()))
 		return ""
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.SuccessWithData("Category loaded successfully", map[string]any{
+	_, _ = w.Write([]byte(api.SuccessWithData("Category loaded successfully", map[string]any{
 		"category": map[string]any{
 			"id":          category.GetID(),
 			"title":       category.GetTitle(),
@@ -147,7 +147,7 @@ func (u *ui) handleUpdateCategory(w http.ResponseWriter, r *http.Request) string
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
@@ -160,20 +160,20 @@ func (u *ui) handleUpdateCategory(w http.ResponseWriter, r *http.Request) string
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Invalid request body").ToString()))
+		_, _ = w.Write([]byte(api.Error("Invalid request body").ToString()))
 		return ""
 	}
 
 	if reqBody.CategoryID == "" {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Category ID is required").ToString()))
+		_, _ = w.Write([]byte(api.Error("Category ID is required").ToString()))
 		return ""
 	}
 
 	category, err := shopStore.CategoryFindByID(ctx, reqBody.CategoryID)
 	if err != nil || category == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Category not found").ToString()))
+		_, _ = w.Write([]byte(api.Error("Category not found").ToString()))
 		return ""
 	}
 
@@ -185,11 +185,11 @@ func (u *ui) handleUpdateCategory(w http.ResponseWriter, r *http.Request) string
 	if err := shopStore.CategoryUpdate(ctx, category); err != nil {
 		u.Logger().Error("Failed to update category", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Failed to update category").ToString()))
+		_, _ = w.Write([]byte(api.Error("Failed to update category").ToString()))
 		return ""
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.Success("Category updated successfully").ToString()))
+	_, _ = w.Write([]byte(api.Success("Category updated successfully").ToString()))
 	return ""
 }

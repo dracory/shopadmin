@@ -41,7 +41,7 @@ func main() {
 		logger.Error("failed to open database", "err", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	store, err := shopstore.NewStore(shopstore.NewStoreOptions{
 		DB:                     db,

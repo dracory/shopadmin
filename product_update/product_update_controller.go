@@ -115,7 +115,7 @@ func (u *ui) Handler(w http.ResponseWriter, r *http.Request) string {
 		}
 
 		component.Mount(r, product, productID)
-		component.Handle(r)
+		_ = component.Handle(r)
 		return component.Render().ToHTML()
 	}
 
@@ -295,11 +295,11 @@ func writeJSON(w http.ResponseWriter, status, message string, data map[string]an
 		resp[k] = v
 	}
 	jsonBytes, _ := json.Marshal(resp)
-	w.Write(jsonBytes)
+	_, _ = w.Write(jsonBytes)
 }
 
 // writeJSONError writes a JSON error response safely (bug #7 fix).
-// Previously the code did w.Write([]byte(`{"status":"error","message":"Failed to parse upload: ` + err.Error() + `"}`))
+// Previously the code did _, _ = w.Write([]byte(`{"status":"error","message":"Failed to parse upload: ` + err.Error() + `"}`))
 // which breaks if err.Error() contains a double quote.
 func writeJSONError(w http.ResponseWriter, message string) {
 	writeJSON(w, "error", message, nil)
@@ -448,7 +448,7 @@ func (u *ui) handleUploadMedia(w http.ResponseWriter, r *http.Request, productID
 		}
 
 		data, err := io.ReadAll(file)
-		file.Close()
+		_ = file.Close()
 		if err != nil {
 			writeJSONError(w, fmt.Sprintf("Failed to read file: %s", err.Error()))
 			return ""
@@ -570,7 +570,7 @@ func (u *ui) handleSaveMetadata(w http.ResponseWriter, r *http.Request, productI
 		}
 	}
 
-	product.SetMetas(metas)
+	_ = product.SetMetas(metas)
 
 	err = shopStore.ProductUpdate(ctx, product)
 	if err != nil {
@@ -666,7 +666,7 @@ func (u *ui) handleSaveTags(w http.ResponseWriter, r *http.Request, productID st
 		delete(metas, "tags")
 	}
 
-	product.SetMetas(metas)
+	_ = product.SetMetas(metas)
 
 	err = shopStore.ProductUpdate(ctx, product)
 	if err != nil {

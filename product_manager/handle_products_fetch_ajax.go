@@ -16,7 +16,7 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 	shopStore := u.Store()
 	if shopStore == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Shop store not available").ToString()))
+		_, _ = w.Write([]byte(api.Error("Shop store not available").ToString()))
 		return ""
 	}
 
@@ -31,7 +31,7 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Invalid request body").ToString()))
+		_, _ = w.Write([]byte(api.Error("Invalid request body").ToString()))
 		return ""
 	}
 
@@ -70,7 +70,7 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 	if err != nil {
 		u.Logger().Error("Failed to load products", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Failed to load products").ToString()))
+		_, _ = w.Write([]byte(api.Error("Failed to load products").ToString()))
 		return ""
 	}
 
@@ -78,7 +78,7 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 	if err != nil {
 		u.Logger().Error("Failed to count products", "error", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(api.Error("Failed to count products").ToString()))
+		_, _ = w.Write([]byte(api.Error("Failed to count products").ToString()))
 		return ""
 	}
 
@@ -98,7 +98,7 @@ func (u *ui) handleLoadProducts(w http.ResponseWriter, r *http.Request) string {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(api.SuccessWithData("Products loaded successfully", map[string]any{
+	_, _ = w.Write([]byte(api.SuccessWithData("Products loaded successfully", map[string]any{
 		"products": productList,
 		"total":    total,
 		"page":     reqBody.Page,
