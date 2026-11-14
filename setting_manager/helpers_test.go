@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"os"
 	"testing"
 
@@ -76,6 +77,25 @@ func postAction(t *testing.T, env *testEnv, action string, extraQuery url.Values
 	}
 
 	req := httptest.NewRequest(http.MethodPost, target, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	env.ui.SettingManager(rec, req)
+
+	var resp apiResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response: %v (body=%q)", err, rec.Body.String())
+	}
+	return resp
+}
+
+// postRawBody posts a raw (possibly malformed) body for the given action.
+func postRawBody(t *testing.T, env *testEnv, action, raw string) apiResponse {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodPost,
+		"/admin/shop?controller=settings&action="+action,
+		strings.NewReader(raw))
 	req.Header.Set("Content-Type", "application/json")
 
 	rec := httptest.NewRecorder()
