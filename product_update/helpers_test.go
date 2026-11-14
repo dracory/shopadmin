@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dracory/shopadmin/product_update"
@@ -96,6 +97,31 @@ func postAction(t *testing.T, env *testEnv, action string, extraQuery url.Values
 	}
 
 	req := httptest.NewRequest(http.MethodPost, target, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	env.ui.ProductUpdate(rec, req)
+
+	var resp apiResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response: %v (body=%q)", err, rec.Body.String())
+	}
+	return resp
+}
+
+// postActionRaw posts a raw (possibly malformed) JSON body for the
+// given action.
+func postActionRaw(t *testing.T, env *testEnv, action string, extraQuery url.Values, raw string) apiResponse {
+	t.Helper()
+
+	q := url.Values{"action": {action}}
+	for k, vs := range extraQuery {
+		q[k] = vs
+	}
+
+	req := httptest.NewRequest(http.MethodPost,
+		"/admin/shop/products?controller=product-update&"+q.Encode(),
+		strings.NewReader(raw))
 	req.Header.Set("Content-Type", "application/json")
 
 	rec := httptest.NewRecorder()
