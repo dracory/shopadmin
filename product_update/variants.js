@@ -50,11 +50,12 @@ function initVariantsApp() {
                     .join('|');
             },
 
-            ensureRow(combo) {
+            variantFor(combo) {
                 const key = this.comboKey(combo);
                 if (!this.variants[key]) {
                     this.variants[key] = { sku: '', price: '', quantity: '' };
                 }
+                return this.variants[key];
             },
 
             pruneVariants() {
@@ -215,7 +216,7 @@ function initVariantsApp() {
                         return {
                             values: combo,
                             sku: v.sku || '',
-                            price: v.price || '',
+                            price: String(v.price ?? ''),
                             quantity: String(v.quantity ?? '')
                         };
                     });

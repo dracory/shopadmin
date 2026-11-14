@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -54,8 +55,12 @@ func TestCategoryCreateFlow(t *testing.T) {
 	// must appear in the table.
 	var body string
 	err = chromedp.Run(ctx,
-		chromedp.WaitReady("table tbody tr:nth-of-type(2)", chromedp.ByQuery),
-		chromedp.Sleep(2*time.Second),
+		chromedp.Sleep(500*time.Millisecond),
+		chromedp.Poll(`location.href.includes('controller=categories')`, nil,
+			chromedp.WithPollingInterval(200*time.Millisecond)),
+		chromedp.Navigate(adminURL("categories")+"&per_page=100"),
+		chromedp.Poll(`document.body.innerText.includes(`+strconv.Quote(title)+`)`, nil,
+			chromedp.WithPollingInterval(200*time.Millisecond)),
 		chromedp.Text("body", &body),
 	)
 	if err != nil {
