@@ -151,8 +151,8 @@ func TestHandle_ProductManagerController(t *testing.T) {
 	}
 
 	body := rr.Body.String()
-	if !strings.Contains(body, "Product Manager") {
-		t.Errorf("Expected body to contain 'Product Manager'")
+	if !strings.Contains(body, "Shop. Products") {
+		t.Errorf("Expected body to contain 'Shop. Products'")
 	}
 }
 
