@@ -2,14 +2,14 @@ package category_manager_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
-	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dracory/shopadmin/category_manager"

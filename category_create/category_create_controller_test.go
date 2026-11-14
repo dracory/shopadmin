@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
 )
 
 func TestCategoryCreatePageRenders(t *testing.T) {

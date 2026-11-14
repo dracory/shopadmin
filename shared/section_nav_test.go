@@ -40,9 +40,9 @@ func TestSectionNavRendersTabs(t *testing.T) {
 
 func TestSectionNavActiveTab(t *testing.T) {
 	cases := map[string]string{
-		"":                 "dashboard",
-		CONTROLLER_ORDERS:  "orders",
-		CONTROLLER_PRODUCTS: "products",
+		"":                    "dashboard",
+		CONTROLLER_ORDERS:     "orders",
+		CONTROLLER_PRODUCTS:   "products",
 		CONTROLLER_CATEGORIES: "categories",
 		CONTROLLER_DISCOUNTS:  "discounts",
 		CONTROLLER_SETTINGS:   "settings",
